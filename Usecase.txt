@@ -1,0 +1,53 @@
+Taking a step back to focus purely on system design and environment setup is the right approach. Building a network billing platform requires careful planning before writing any code.
+Here is the strategic plan for your development environment and core use cases.
+------------------------------
+## Phase 1: The Development Sandbox Environment
+You cannot safely test a billing system on a live production network. You need an isolated local sandbox environment that mimics a real-world ISP or hotspot setup.
+
+       [ Developer Laptop ]
+                |
+     +----------+----------+
+
+     | (Runs Backend App)  |
+     +----------+----------+
+                |
+                v  (Host-Only Network)
+   [ MikroTik CHR (Virtual VM) ]
+                |
+                v  (Virtual Wi-Fi / LAN Bridge)
+   [ Mock Client (Browser / Mobile VM) ]
+
+To set this sandbox up on your computer, you will use:
+
+* MikroTik CHR (Cloud Hosted Router): Download the free VirtualBox or VMware image from MikroTik's website. This gives you a fully functional virtual MikroTik router running inside your PC. It behaves exactly like your hardware RB951 but allows you to snapshot, reset, and test configurations without bricking a physical device.
+* Virtual Network Adapters:
+* Adapter 1 (NAT): Connects the virtual MikroTik to your home internet (to pull updates and simulate external payment gateway traffic).
+   * Adapter 2 (Host-Only): A private network between your code/backend application and the virtual MikroTik API.
+   * Adapter 3 (Internal Network): A private network connected to a virtual machine (like a mock Windows/Ubuntu desktop) that acts as the "Customer Client Device" trying to browse the internet.
+* Mock Payment API Gateways: Do not use real money endpoints yet. Use payment simulators (like the Safaricom Daraja Sandbox environment for M-Pesa or Stripe/Paystack test keys) to mock successful and failed financial transactions.
+
+------------------------------
+## Phase 2: Core Use Cases
+To build a platform like Centipid, your system must handle three distinct user types: the Network Admin (you/the business owner), the End Customer, and the System Automation (Cron/Background Workers).
+## 1. Network Admin Use Cases
+
+* Router Onboarding: The admin logs into the billing dashboard and links a new MikroTik router by inputting its IP address, API credentials, and location details.
+* Package Management: The admin creates internet plans defining pricing, duration (e.g., 1 Hour, 24 Hours, 30 Days), data caps (e.g., 5GB), and bandwidth profiles (e.g., 3Mbps Download / 1Mbps Upload).
+* Voucher Management: The admin triggers a batch generation of random internet tokens (vouchers) to be printed out and sold physically in shops.
+* Analytics Dashboard: The admin views real-time revenue graphs, active online users, and router uptime statistics.
+
+## 2. End Customer Use Cases
+
+* Self-Service Captive Portal Access: A user connects to the Wi-Fi network, is automatically redirected to a custom login page, and views available internet packages.
+* Automated Purchase via Mobile Money: The user selects a package, inputs their mobile phone number (e.g., M-Pesa), receives a prompt on their phone, inputs their PIN, and gets instantly authenticated online without manual admin intervention.
+* Voucher Redemption: A user buys a physical printed voucher, types the code into the captive portal, and gains access.
+* Session Status Check: A user can visit a portal page (e.g., logout.net or status.net) to see exactly how much time or data they have left on their active package.
+
+## 3. System & Automation Use Cases (Behind the Scenes)
+
+* Dynamic Bandwidth Queueing: When a user is authenticated, the system commands the MikroTik to create a "Simple Queue" restricting that specific user's MAC/IP address to their purchased speed.
+* Session Expiration Handling: A background worker constantly checks active users against their expiration times. Once an account expires, the system drops the user's connection and redirects them back to the captive portal.
+* Payment Failure Reconciliation: If an STK Push fails or a user cancels the prompt, the system gracefully times out the session request and alerts the user on screen, ensuring no free internet is provisioned.
+
+Would you like to map out the database tables needed to support these use cases next, or should we define the exact API communication flow between the captive portal, your backend, and the MikroTik?
+
