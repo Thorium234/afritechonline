@@ -1,0 +1,30 @@
+Yes, you can absolutely use WinBox to connect to your MikroTik CHR (Cloud Hosted Router) inside your virtual machine, and you can connect that same CHR to your billing system.
+In fact, using WinBox to configure your virtual CHR is the exact industry-standard way to manage it, just like you would manage a physical RB951.
+To make sure your WinBox, your CHR (Virtual Machine), and your Billing System (Code/Application) can all talk to each other simultaneously, you need to set up the virtual network adapters correctly.
+## 1. How to Configure Your Virtual Machine (VirtualBox Example)
+Before turning on the CHR virtual machine, open its settings and configure two network adapters:
+
+* Adapter 1: Bridged Adapter (or NAT)
+* Purpose: Connects your CHR to your actual physical router/home internet.
+   * Result: This allows the CHR to pull the correct time via NTP and communicate out to payment gateway APIs.
+* Adapter 2: Host-Only Adapter
+* Purpose: Creates a private, virtual network switch inside your computer that only your main laptop OS and your Virtual Machines can see.
+   * Result: Your WinBox and your Billing System application will use this specific virtual network to securely send API and RADIUS commands to the CHR.
+
+## 2. Steps to Connect via WinBox
+
+   1. Launch your VirtualBox/VMware and start the MikroTik CHR.
+   2. Once it boots to the command-line login prompt, open WinBox on your laptop.
+   3. Click on the Neighbors tab at the bottom.
+   4. You will see your CHR appear in the list showing its virtual MAC address and IP address.
+   5. Click on the MAC address, enter the default login (Login: admin, Password: leave blank or what you set during initialization), and click Connect.
+
+## 3. Enabling the Connection to Your System
+Once you are inside WinBox, you must enable the specific "ports" so your billing system can talk to the CHR over the Host-Only network.
+In WinBox, go to IP -> Services:
+
+* For API Billing Systems: Ensure api (port 8728) or api-ssl (port 8729) is enabled.
+* For Web Portal Management: Ensure www (port 80) or winbox (port 8291) are active if your system needs to redirect users.
+
+Are you using VirtualBox or VMware to host your CHR virtual machine? I can give you the exact step-by-step network configuration settings for either one.
+
