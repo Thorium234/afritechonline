@@ -1,0 +1,52 @@
+To build a network billing platform like Centipid, you need to create a central application that handles user management and payment gateways, then links to the MikroTik RouterOS using two primary communication methods: the MikroTik API (for direct router management) and RADIUS (for real-time authentication and session tracking).
+Here is the architectural blueprint and development roadmap to build your own billing system.
+------------------------------
+## 1. The System Architecture
+A platform like Centipid consists of three main layers:
+
+[ Customer / Admin Frontend ] <---> [ Core Backend Application ]
+
+                                         |          |
+         +-------------------------------+          +-----------------------+
+
+         | (Via REST API / RADIUS)                  | (Via M-Pesa / Card API)
+         v                                          v
+[ MikroTik RB951 / RouterOS ]                 [ Payment Gateway ]
+
+
+* The Backend (The Brain): Handles database storage (users, packages, payments), runs cron jobs for expirations, and generates voucher codes. Popular choices include Node.js, Python (Django/FastAPI), or PHP (Laravel).
+* The Frontend (The Interface): A responsive web dashboard for you to generate vouchers/packages, and a user-facing captive portal (Login Page) where customers buy access.
+* The Database: PostgreSQL or MySQL to keep track of user accounts, payments, and active sessions.
+
+------------------------------
+## 2. Core Development Steps## Step A: Router Communication (The MikroTik Link)
+To talk to the MikroTik RB951 from your backend code, you will use the RouterOS API.
+
+* Libraries to use: If using Node.js, use packages like mikro-node. For Python, use routeros-api. For PHP, use RouterOS API PHP.
+* What the code does: When a payment is successful, your backend script runs an API command to the router to add a user, change their speed profile, or extend their expiration time.
+* Example API Workflow:
+1. Customer pays on the web portal.
+   2. Backend receives payment confirmation.
+   3. Backend sends API command: /ip/hotspot/user/add name=user1 password=123 profile=1Mbps_Plan
+
+## Step B: Real-Time Traffic Management (RADIUS Server)
+While you can run a billing system purely on API commands, advanced platforms use FreeRADIUS.
+
+* Instead of storing thousands of users directly on your MikroTik's limited storage (the RB951 has limited memory), the MikroTik asks your FreeRADIUS server, "Is this voucher valid?" every time a user tries to connect.
+* FreeRADIUS queries your central database and tells the MikroTik to either allow or block the user, and automatically applies speed limits (Queues) dynamically.
+
+## Step C: Payment Gateway Integration
+To automate the billing, you must integrate local mobile money or card APIs.
+
+* In Kenya, you will integrate the Safaricom M-Pesa Daraja API (specifically C2B or STK Push/M-Pesa Express).
+* Workflow: The customer enters their phone number on your portal → Your backend triggers an STK Push to their phone → They enter their PIN → Safaricom sends a "Callback" validation to your system → Your backend activates the internet via the MikroTik API.
+
+------------------------------
+## 3. Key Modules to Build First
+
+   1. The Voucher Generator: A script that creates random, unique strings (e.g., A7x9-K2P) and assigns them a time limit (e.g., 1 Hour, 24 Hours) and bandwidth speed.
+   2. The Cron Job Engine: A background service that checks the database every minute. If a user’s time has run out, it sends a command to disconnect them from the MikroTik.
+   3. The Router Sync Module: A dashboard settings page where you can input your MikroTik's Public IP, API Port (default 8728), Username, and Password to establish the link.
+
+Which programming language (like Node.js, Python, or PHP) are you planning to use to build the platform, and would you like a sample code snippet showing how to connect to a MikroTik router using that language?
+
