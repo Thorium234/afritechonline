@@ -1,0 +1,25 @@
+To link a billing system to your MikroTik RB951, you need to configure your router to communicate with external software using RADIUS authentication or the MikroTik API. [1, 2] 
+## 1. Choose Your Billing Method
+
+* Hotspot Vouchers / Pay-per-use: Best for public Wi-Fi, cafes, or hostels where users log into a captive portal page.
+* PPPoE Subscriptions: Best for home or office internet plans where users connect via a dialed-in username and password.
+* Popular Billing Platforms: Third-party software options like Mikhmon, Centipid Billing, Pawa WiFi, or SopraEnt handle customer management, packages, and automated payment gateways (such as mobile money or card payments). [2, 3, 4, 5, 6, 7] 
+
+## 2. General Steps to Link Your MikroTik RB951
+
+   1. Prepare the Router: Connect your MikroTik to the internet and make sure it has a stable time configuration (NTP client) so session times match your billing logs. [1, 8] 
+   2. Configure Hotspot or PPPoE: Set up the basic Hotspot or PPPoE service on the correct local/wireless interface of your RB951 via WinBox. [1, 8] 
+   3. Set up RADIUS Client: In MikroTik RouterOS, navigate to RADIUS, add a new server, and input your billing provider's server IP address and shared secret password. Enable hotspot and/or ppp services under the RADIUS settings. [1, 8] 
+   4. Connect the Payment Gateway / API: Link your billing dashboard to your payment provider (e.g., M-Pesa or local mobile money APIs). When a customer pays, the billing platform uses the RADIUS or MikroTik API connection to instantly create, provision, and assign speed limits to their account. [1, 6, 9] 
+
+Would you like help configuring Hotspot or PPPoE on your RB951, or do you have a specific billing software in mind that you want to integrate?
+
+[1] [https://www.tiktok.com](https://www.tiktok.com/@roncom_solutions_limited/video/7644100185043307797)
+[2] [https://safinet.co.ke](https://safinet.co.ke/blog/mikrotik-hotspot-billing-routeros-setup-guide)
+[3] [https://forum.mikrotik.com](https://forum.mikrotik.com/t/automated-billing-solutions/36732)
+[4] [https://www.youtube.com](https://www.youtube.com/watch?v=SV1LtIBxRe8)
+[5] [https://centipidbilling.com](https://centipidbilling.com/blog/mikrotik)
+[6] [https://pawa.co.ke](https://pawa.co.ke/blog/mikrotik-billing-system/)
+[7] [https://www.youtube.com](https://www.youtube.com/watch?v=_QEeR5JglDU)
+[8] [https://www.scribd.com](https://www.scribd.com/document/419668056/How-to-Set-Up-Billing-Hotspot-on-Mirotik)
+[9] [https://pawa.co.ke](https://pawa.co.ke/blog/mikrotik-billing-system/)
