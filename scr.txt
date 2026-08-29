@@ -1,0 +1,84 @@
+Here is a detailed breakdown and architectural review of your Afritech Online repository blueprint based on your provided README.md.
+The project is highly structured, and opting for a Go (Gin) + MySQL backend paired with a Next.js (TypeScript) frontend is an excellent choice for building a high-performance, concurrent, and type-safe ISP billing platform.
+------------------------------
+## 🏛️ Architectural & Data Design Review
+Your decoupled approach (Frontend ➔ Go API ➔ Services) is ideal for scalability. However, managing an ISP requires strict data mapping early on. Below is a suggested relational schema and state flow optimization to ensure a clean implementation for Phase 1.
+## 1. Core Data Models (MySQL Entities)
+To support your Phase 1 business flow entirely through the Go API, your database design should establish these exact relationships:
+
+* User / Customer: Stores credentials, role (SUPER_ADMIN, CUSTOMER, etc.), contact details, and account status (ACTIVE, SUSPENDED).
+* Package: Stores service offerings (download_speed, upload_speed, price, duration_days, is_unlimited).
+* Subscription: Maps a customer_id to a package_id. It must explicitly track start_at, expires_at, and status.
+* Invoice: Automatically generated whenever a subscription is created or renewed. Contains amount_due, billing_date, and status (UNPAID, PAID, OVERDUE).
+* Payment: Stores transaction details (amount, payment_method defaulted to "MANUAL" for Phase 1, transaction_reference). Maps to an invoice_id.
+
+## 2. Optimized Phase 1 Lifecycle Flow
+Your proposed logic relies heavily on state transitions. To ensure smooth transitions without race conditions, implement this state machine in your Go backend services:
+
+[Subscription: PENDING] ──(Generates)──> [Invoice: UNPAID]
+                                                │
+                                         (Record Payment)
+                                                │
+                                                ▼
+[Subscription: ACTIVE] <──(Triggers)─── [Invoice: PAID]
+        │
+ (Expiry Daemon)
+        │
+        ▼
+[Subscription: EXPIRED]
+
+------------------------------
+## 🏗️ Recommended Project Directory Layout
+For a Go project utilizing the Gin framework, a Domain-Driven Design (DDD) or Clean Architecture layout prevents the code from becoming monolithic spaghetti as you scale into FreeRADIUS and MikroTik operations in later phases.
+Here is the recommended layout for your backend/ directory:
+
+backend/
+├── cmd/
+│   └── api/
+│       └── main.go              # Application entry point
+├── config/
+│   └── config.go            # Viper/env loading logic
+├── internal/
+│   ├── auth/                # JWT, Bcrypt, Login/Register handlers
+│   ├── customer/            # Customer domain logic
+│   ├── package/             # Internet package domain logic
+│   ├── subscription/        # Subscriptions & Expiry cron jobs
+│   ├── billing/             # Invoice & manual payment engines
+│   └── middleware/          # JWT Auth, CORS, Logger, Recovery
+├── pkg/
+│   ├── database/            # MySQL GORM/sqlx initialization
+│   └── response/            # Standardized JSON response helpers
+├── db/
+│   └── migrations/          # Raw SQL migration files (.sql)
+├── Dockerfile
+├── go.mod
+└── go.sum
+
+------------------------------
+## 🛠️ Key Implementation Strategies for Phase 1
+To successfully meet the exit criteria for Phase 1, focus on these technical decisions:
+
+   1. Database Migrations: Avoid using native auto-migration tools in production environments. Use a robust version-controlled migration tool like Golang-Migrate or Pressly/Goose. This will ensure smooth transitions when adding FreeRADIUS schema additions later.
+   2. Standardized API Responses: To keep your future Next.js frontend simple, ensure all Go endpoints return a universal JSON envelope:
+   
+   {
+     "success": true,
+     "message": "Resource fetched successfully",
+     "data": {} 
+   }
+   }
+   
+   3. The Expiry Cron Engine: Even without MikroTik automation in Phase 1, you must build the logic that flags expired subscriptions. Implement a background worker in Go using a ticker (time.NewTicker) or a library like robfig/cron. It should scan the database hourly:
+   
+   UPDATE subscriptions SET status = 'EXPIRED' WHERE expires_at <= NOW() AND status = 'ACTIVE';
+   
+   
+------------------------------
+## 📈 Future-Proofing for Phase 3 (Network Integration)
+While FreeRADIUS and MikroTik are scoped for later, making small adjustments to your Phase 1 database design will save you massive refactoring time later:
+
+* Static vs. Dynamic IPs: Add a nullable framed_ip_address field to your Customer or Subscription model now.
+* MikroTik Secret Profiles: Ensure your internet packages table has a field for mikrotik_profile_name or bandwidth limit strings matching RouterOS simple queues (e.g., 10M/5M).
+
+Would you like me to generate the Go database migration files (.sql) for your tables, or would you prefer a boilerplate setup for the main.go and Gin router to jumpstart Phase 0?
+
