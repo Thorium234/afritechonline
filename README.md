@@ -1,387 +1,1042 @@
 # Afritech Online
 
-**Afritech Online** is an ISP management and internet billing platform designed to automate customer management, internet package subscriptions, payments, authentication, and MikroTik router management.
+**Afritech Online** is an ISP management and internet billing platform designed to automate customer management, internet packages, subscriptions, billing, payments, network authentication, and MikroTik network management.
 
-The project is being designed primarily for small and medium-sized Internet Service Providers (ISPs), Wi-Fi hotspot operators, and community networks that need a centralized way to manage customers and control internet access.
+The platform is intended for small and medium-sized Internet Service Providers (ISPs), Wi-Fi hotspot operators, and community networks that need a centralized system for managing customers and internet access.
 
 > **Project Status:** 🚧 Under active development
-> **Current stage:** Architecture and system design
+> **Current Phase:** Phase 1, Go + MySQL Backend
 
 ---
 
 ## Overview
 
-Managing an ISP manually becomes difficult as the number of customers increases. Customer registration, package assignment, payments, internet activation, session tracking, and account expiration can quickly become disconnected processes.
+Managing an ISP manually becomes increasingly difficult as the number of customers grows. Customer registration, package assignment, payments, internet activation, session tracking, and subscription expiration can become disconnected processes.
 
-Afritech Online aims to bring these operations into a single platform.
+Afritech Online aims to bring these operations into one platform.
 
-The intended system connects:
+The long-term system will connect:
 
 * Customer management
 * Internet packages
+* Subscriptions
 * Billing
 * M-Pesa payments
 * MikroTik RouterOS
 * FreeRADIUS
 * Internet authentication
-* Session management
-* Account expiration
+* Network sessions
+* Automatic account expiration
 * Notifications
-* Administrative reporting
+* Reporting
+* Network monitoring
 
-The long-term goal is to allow an ISP administrator to manage the entire customer lifecycle from one system.
-
----
-
-## Core Concept
-
-The basic customer lifecycle is:
+The core objective is to automate the customer lifecycle:
 
 ```text
 Customer
-   │
-   ▼
+    │
+    ▼
 Select Internet Package
-   │
-   ▼
+    │
+    ▼
 Create Subscription
-   │
-   ▼
+    │
+    ▼
 Make Payment
-   │
-   ▼
+    │
+    ▼
 Payment Verification
-   │
-   ▼
-Activate Internet Account
-   │
-   ▼
-Authenticate Through RADIUS
-   │
-   ▼
-MikroTik Provides Internet Access
-   │
-   ▼
+    │
+    ▼
+Activate Subscription
+    │
+    ▼
+Network Provisioning
+    │
+    ▼
+Internet Access
+    │
+    ▼
 Subscription Expires
-   │
-   ▼
-Account Suspended
+    │
+    ▼
+Network Access Disabled
 ```
 
-This removes the need for administrators to manually activate and deactivate customers every time a payment is received or a package expires.
+The final system is intended to remove the need for administrators to manually activate and deactivate customers whenever payments are received or subscriptions expire.
 
 ---
 
-## Planned Architecture
+# Technology Stack
+
+| Component              | Technology        |
+| ---------------------- | ----------------- |
+| Backend                | Go                |
+| Backend Framework      | Gin               |
+| Frontend               | Next.js           |
+| Frontend Language      | TypeScript        |
+| Development Database   | MySQL             |
+| Network Authentication | FreeRADIUS        |
+| Network Infrastructure | MikroTik RouterOS |
+| Payment Platform       | M-Pesa            |
+| API                    | REST + JSON       |
+| Containers             | Docker            |
+| Version Control        | Git + GitHub      |
+| CI/CD                  | GitHub Actions    |
+
+The technology stack is intentionally separated into phases. MikroTik, FreeRADIUS, and M-Pesa will not be introduced until the core application is stable.
+
+---
+
+# Architecture
+
+The final architecture is expected to evolve into:
 
 ```text
-                         ┌───────────────────────┐
-                         │     Customer Portal    │
-                         │                       │
-                         │ Login                 │
-                         │ Packages              │
-                         │ Payments              │
-                         │ Account Status        │
-                         └───────────┬───────────┘
-                                     │
-                                     ▼
-                         ┌───────────────────────┐
-                         │      Backend API      │
-                         │                       │
-                         │ Authentication        │
-                         │ Customers             │
-                         │ Packages              │
-                         │ Subscriptions         │
-                         │ Billing               │
-                         │ Payments              │
-                         │ Notifications         │
-                         └───────┬────────┬──────┘
-                                 │        │
-                    ┌────────────┘        └─────────────┐
-                    ▼                                   ▼
-          ┌───────────────────┐              ┌───────────────────┐
-          │     FreeRADIUS    │              │   Payment System  │
-          │                   │              │                   │
-          │ Authentication    │              │ M-Pesa            │
-          │ Authorization     │              │ Other gateways    │
-          │ Accounting        │              │                   │
-          └─────────┬─────────┘              └───────────────────┘
-                    │
-                    ▼
-          ┌───────────────────┐
-          │      MikroTik     │
-          │     RouterOS      │
-          │                   │
-          │ Hotspot / PPPoE   │
-          │ Bandwidth Control │
-          │ User Management   │
-          └───────────────────┘
+                         AFRITECH ONLINE
+                               │
+                ┌──────────────┴──────────────┐
+                │                             │
+                ▼                             ▼
+        ┌─────────────────┐           ┌─────────────────┐
+        │     Next.js     │           │ Customer Portal │
+        │    Frontend     │           │                 │
+        └────────┬────────┘           └────────┬────────┘
+                 │                             │
+                 └──────────────┬──────────────┘
+                                │
+                              HTTPS
+                                │
+                                ▼
+                       ┌─────────────────┐
+                       │   Go + Gin API  │
+                       │     Backend     │
+                       └────────┬────────┘
+                                │
+               ┌────────────────┼────────────────┐
+               │                │                │
+               ▼                ▼                ▼
+          ┌─────────┐     ┌─────────────┐  ┌──────────────┐
+          │  MySQL  │     │   M-Pesa    │  │   Network    │
+          │         │     │             │  │   Services   │
+          └─────────┘     └─────────────┘  └──────┬───────┘
+                                                  │
+                                      ┌───────────┴───────────┐
+                                      │                       │
+                                      ▼                       ▼
+                               ┌─────────────┐         ┌─────────────┐
+                               │ FreeRADIUS  │         │   MikroTik   │
+                               └─────────────┘         └─────────────┘
+```
+
+The frontend will never communicate directly with MySQL, MikroTik, FreeRADIUS, or M-Pesa.
+
+All business operations will pass through the Go backend.
+
+```text
+Next.js
+   │
+   ▼
+Go API
+   │
+   ├── MySQL
+   ├── M-Pesa
+   ├── MikroTik
+   └── FreeRADIUS
 ```
 
 ---
 
-## Main Components
+# Development Phases
 
-### Customer Management
+Afritech Online will be developed incrementally.
 
-Administrators will be able to:
+Each phase must produce a working and testable capability before the project moves to the next phase.
 
-* Register customers
-* Update customer information
-* View customer status
-* Suspend customers
-* Reactivate customers
-* View subscription history
-* View payment history
+---
+
+# Phase 0: Project Foundation
+
+## Objective
+
+Establish the project structure, development environment, configuration system, database connection, logging, and basic API infrastructure.
+
+### Tasks
+
+* [ ] Establish repository structure
+* [ ] Initialize Go backend
+* [ ] Configure Gin
+* [ ] Configure MySQL
+* [ ] Configure environment variables
+* [ ] Add database migration system
+* [ ] Add structured logging
+* [ ] Add centralized error handling
+* [ ] Add API response structure
+* [ ] Add `/health` endpoint
+* [ ] Create Docker development environment
+* [ ] Create `.env.example`
+* [ ] Configure `.gitignore`
+
+### Expected Structure
+
+```text
+afritechonline/
+│
+├── backend/
+├── frontend/
+├── infrastructure/
+├── docs/
+├── scripts/
+│
+├── .env.example
+├── .gitignore
+├── docker-compose.yml
+└── README.md
+```
+
+### Exit Criteria
+
+Phase 0 is complete when:
+
+```text
+Go application starts
+        ↓
+MySQL connects
+        ↓
+Configuration loads
+        ↓
+Database migrations run
+        ↓
+/health returns OK
+```
+
+---
+
+# Phase 1: Go + MySQL Backend
+
+## Objective
+
+Build the core ISP management backend without depending on the frontend, MikroTik, FreeRADIUS, or M-Pesa.
+
+This is the current primary development phase.
+
+### Core Modules
+
+```text
+backend/
+│
+├── auth/
+├── users/
+├── customers/
+├── packages/
+├── subscriptions/
+├── billing/
+├── payments/
+└── audit/
+```
+
+### Authentication
+
+Implement:
+
+```text
+POST /api/v1/auth/register
+POST /api/v1/auth/login
+POST /api/v1/auth/refresh
+POST /api/v1/auth/logout
+GET  /api/v1/auth/me
+```
+
+Initial roles:
+
+```text
+SUPER_ADMIN
+ADMIN
+STAFF
+CUSTOMER
+```
+
+### Customers
+
+Implement:
+
+```text
+POST   /api/v1/customers
+GET    /api/v1/customers
+GET    /api/v1/customers/:id
+PUT    /api/v1/customers/:id
+DELETE /api/v1/customers/:id
+```
 
 ### Internet Packages
 
-The system will support configurable packages containing information such as:
+Packages should support:
 
 * Package name
 * Price
 * Duration
 * Download speed
 * Upload speed
-* Data limits
-* Active/inactive status
+* Data limit
+* Status
 
 Example:
 
 ```text
-Package: Home Basic
-Price: KES 1,000
-Duration: 30 days
-Download: 10 Mbps
-Upload: 5 Mbps
+Home Basic
+KES 1,000
+30 Days
+10 Mbps Download
+5 Mbps Upload
+```
+
+### Subscriptions
+
+Subscription states:
+
+```text
+PENDING
+ACTIVE
+EXPIRED
+SUSPENDED
+CANCELLED
+```
+
+The backend will manage:
+
+```text
+Customer
+    │
+    ▼
+Package
+    │
+    ▼
+Subscription
+    │
+    ├── Start Date
+    ├── Expiry Date
+    └── Status
 ```
 
 ### Billing
 
-Afritech Online will automatically calculate subscription charges and track:
-
-* Pending payments
-* Completed payments
-* Failed payments
-* Expired subscriptions
-* Active subscriptions
-* Payment history
-
-### M-Pesa Integration
-
-The platform is intended to support M-Pesa payments, including an STK Push workflow.
+Implement:
 
 ```text
-Customer
-   │
-   ▼
-Select Package
-   │
-   ▼
-Enter M-Pesa Number
-   │
-   ▼
-STK Push
-   │
-   ▼
-Customer Confirms Payment
-   │
-   ▼
-Payment Callback
-   │
-   ▼
-Verify Transaction
-   │
-   ▼
+Invoices
+Payment Records
+Payment Status
+Subscription Charges
+```
+
+Payment states:
+
+```text
+PENDING
+COMPLETED
+FAILED
+CANCELLED
+```
+
+At this phase, payments can be recorded manually.
+
+**M-Pesa is deliberately excluded from Phase 1.**
+
+### Phase 1 Exit Criteria
+
+The following must work entirely through the Go API:
+
+```text
+Create Administrator
+        ↓
+Login
+        ↓
+Create Customer
+        ↓
+Create Internet Package
+        ↓
+Create Subscription
+        ↓
+Generate Invoice
+        ↓
+Record Payment
+        ↓
 Activate Subscription
 ```
 
-Payment activation must only happen after the backend has successfully verified the payment.
-
-### FreeRADIUS
-
-FreeRADIUS is intended to handle authentication and authorization.
-
-It can be used to manage:
-
-* User credentials
-* Authentication
-* Session accounting
-* Bandwidth profiles
-* Access policies
-* Session start and stop information
-
-### MikroTik Integration
-
-Afritech Online is designed to integrate with MikroTik RouterOS.
-
-Potential management capabilities include:
-
-* Creating users
-* Removing users
-* Enabling users
-* Disabling users
-* Assigning speed profiles
-* Managing hotspot users
-* Managing PPPoE users
-* Monitoring active sessions
-* Disconnecting sessions
-* Applying access restrictions
-
-The MikroTik integration will be separated from the core business logic so that router-specific functionality does not contaminate the rest of the application.
+Automated tests must cover the critical business logic.
 
 ---
 
-## Technology Stack
+# Phase 2: Next.js Frontend
 
-The exact production stack is still being finalized.
+## Objective
 
-The architecture is expected to use technologies in the following areas:
+Build the web interface on top of the completed Go API.
 
-| Component              | Technology                         |
-| ---------------------- | ---------------------------------- |
-| Frontend               | Web application                    |
-| Backend                | REST API                           |
-| Database               | PostgreSQL                         |
-| Authentication         | Token/session based authentication |
-| Network Authentication | FreeRADIUS                         |
-| Network Device         | MikroTik RouterOS                  |
-| Payments               | M-Pesa                             |
-| Deployment             | Docker                             |
-| Version Control        | Git + GitHub                       |
-
-Technology choices may change as implementation progresses.
-
----
-
-## Project Structure
-
-The project is currently in the design phase. The planned structure is:
+The frontend will consume the API rather than implementing business logic itself.
 
 ```text
-afritechonline/
-│
-├── backend/
-│   ├── auth/
-│   ├── customers/
-│   ├── packages/
-│   ├── subscriptions/
-│   ├── billing/
-│   ├── payments/
-│   ├── mikrotik/
-│   ├── radius/
-│   └── notifications/
-│
-├── frontend/
-│   ├── components/
-│   ├── dashboard/
-│   ├── customer/
-│   └── portal/
-│
-├── infrastructure/
-│   ├── freeradius/
-│   ├── mikrotik/
-│   └── docker/
-│
-├── docs/
-│   ├── architecture.md
-│   ├── database.md
-│   ├── api.md
-│   └── deployment.md
-│
-├── README.md
-├── .env.example
-└── docker-compose.yml
+Next.js
+   │
+   │ REST / JSON
+   ▼
+Go Backend
+   │
+   ▼
+MySQL
+```
+
+### Frontend Foundation
+
+* [ ] Next.js
+* [ ] TypeScript
+* [ ] UI system
+* [ ] API client
+* [ ] Authentication
+* [ ] Form validation
+* [ ] Error handling
+* [ ] Loading states
+* [ ] Protected routes
+
+### Main Interfaces
+
+```text
+/login
+
+/dashboard
+
+/customers
+/customers/new
+/customers/[id]
+
+/packages
+/packages/new
+/packages/[id]
+
+/subscriptions
+/subscriptions/[id]
+
+/billing
+/invoices
+/payments
+
+/settings
+```
+
+### Admin Dashboard
+
+The dashboard should eventually provide:
+
+```text
+Total Customers
+Active Customers
+Expired Customers
+Active Packages
+Active Subscriptions
+Pending Payments
+Revenue
+```
+
+### Phase 2 Exit Criteria
+
+An administrator must be able to perform the Phase 1 workflow through the browser:
+
+```text
+Login
+  ↓
+Dashboard
+  ↓
+Create Customer
+  ↓
+Create Package
+  ↓
+Create Subscription
+  ↓
+Generate Invoice
+  ↓
+Record Payment
+  ↓
+View Active Subscription
 ```
 
 ---
 
-## Development Roadmap
+# Phase 3: MikroTik Integration
 
-### Phase 1: System Design
+## Objective
 
-* [x] Initial project idea
-* [x] Initial architecture
-* [x] Use case definition
-* [x] MikroTik configuration research
-* [ ] Finalize database design
-* [ ] Finalize API architecture
-* [ ] Define authentication architecture
+Connect the Go backend to the physical MikroTik router and introduce network automation.
 
-### Phase 2: Backend
+The MikroTik router has already been connected and verified through WinBox, providing the initial hardware environment for this phase.
 
-* [ ] Project initialization
-* [ ] Database implementation
-* [ ] User authentication
-* [ ] Customer management
-* [ ] Internet package management
-* [ ] Subscription management
-* [ ] Billing system
-* [ ] Payment records
-* [ ] M-Pesa integration
-* [ ] Payment callbacks
-* [ ] Subscription activation logic
-
-### Phase 3: Network Integration
-
-* [ ] FreeRADIUS setup
-* [ ] RADIUS authentication
-* [ ] RADIUS accounting
-* [ ] MikroTik integration
-* [ ] User provisioning
-* [ ] Speed profile management
-* [ ] Session management
-* [ ] Automatic account suspension
-* [ ] Automatic account activation
-
-### Phase 4: Frontend
-
-* [ ] Admin dashboard
-* [ ] Customer dashboard
-* [ ] Package management interface
-* [ ] Customer management interface
-* [ ] Billing interface
-* [ ] Payment interface
-* [ ] Network monitoring interface
-
-### Phase 5: Production
-
-* [ ] Docker deployment
-* [ ] Environment configuration
-* [ ] Database backups
-* [ ] Logging
-* [ ] Monitoring
-* [ ] Security hardening
-* [ ] Automated testing
-* [ ] CI/CD
-* [ ] Production deployment
+MikroTik integration will be introduced gradually.
 
 ---
 
-## Security
+## Phase 3A: MikroTik Connectivity
 
-Security is a core requirement because the platform will handle customer information, payment information, network credentials, and infrastructure access.
+First establish communication between Go and the router.
 
-The production system must:
+```text
+Go Backend
+     │
+     ▼
+MikroTik API
+     │
+     ▼
+Router
+```
 
+Initial capabilities:
+
+* [ ] Connect to router
+* [ ] Authenticate
+* [ ] Get router identity
+* [ ] Get RouterOS version
+* [ ] Check connection status
+* [ ] Handle connection failures
+* [ ] Disconnect safely
+
+Example endpoint:
+
+```text
+GET /api/v1/routers/:id/status
+```
+
+### Exit Criteria
+
+The backend can reliably connect to the MikroTik and retrieve basic router information.
+
+No customer provisioning yet.
+
+---
+
+# Phase 3B: Router Management
+
+Create router management inside Afritech Online.
+
+```text
+routers
+```
+
+Potential information:
+
+```text
+Router ID
+Router Name
+IP Address
+API Port
+Username
+Encrypted Credentials
+Status
+Created At
+Updated At
+```
+
+API:
+
+```text
+POST   /api/v1/routers
+GET    /api/v1/routers
+GET    /api/v1/routers/:id
+PUT    /api/v1/routers/:id
+DELETE /api/v1/routers/:id
+```
+
+The administrator should be able to test a router connection from the Afritech Online dashboard.
+
+---
+
+# Phase 3C: MikroTik User Management
+
+The backend will begin managing actual network users.
+
+Capabilities:
+
+```text
+Create User
+Get User
+Enable User
+Disable User
+Delete User
+```
+
+The Go network service will translate Afritech Online operations into the appropriate RouterOS operations.
+
+---
+
+# Phase 3D: Bandwidth Profiles
+
+Connect internet packages with network profiles.
+
+Example:
+
+```text
+Afritech 5 Mbps
+Afritech 10 Mbps
+Afritech 20 Mbps
+```
+
+Architecture:
+
+```text
+Internet Package
+       │
+       ▼
+Network Profile
+       │
+       ▼
+MikroTik
+```
+
+A customer's purchased package must determine the appropriate network configuration.
+
+---
+
+# Phase 3E: Automatic Network Provisioning
+
+Connect subscription activation to MikroTik provisioning.
+
+```text
+Customer
+    ↓
+Subscription
+    ↓
+Payment
+    ↓
+ACTIVE
+    ↓
+Network Provisioning
+    ↓
+MikroTik
+    ↓
+Internet Access
+```
+
+The goal is to eliminate manual router configuration for every customer.
+
+---
+
+# Phase 3F: Automatic Expiration
+
+When a subscription expires:
+
+```text
+Subscription
+      │
+      ▼
+Expiry Date Reached
+      │
+      ▼
+Subscription = EXPIRED
+      │
+      ▼
+Network Provisioning Service
+      │
+      ▼
+Disable Customer
+```
+
+This operation should eventually run automatically without administrator intervention.
+
+---
+
+# Phase 4: FreeRADIUS
+
+## Objective
+
+Introduce FreeRADIUS for network authentication, authorization, and accounting.
+
+The initial architecture is:
+
+```text
+Customer Device
+       │
+       ▼
+MikroTik
+       │
+       ▼
+FreeRADIUS
+       │
+       ▼
+Authentication
+       │
+       ▼
+Internet Access
+```
+
+FreeRADIUS will eventually handle:
+
+* User authentication
+* Authorization
+* Session accounting
+* Bandwidth profiles
+* Access policies
+* Session start/stop information
+
+FreeRADIUS is intentionally introduced after direct MikroTik integration so that network problems can be isolated during development.
+
+---
+
+# Phase 5: M-Pesa Integration
+
+## Objective
+
+Introduce real payment processing after the billing and subscription systems are stable.
+
+Architecture:
+
+```text
+Customer
+    │
+    ▼
+Next.js
+    │
+    ▼
+Go Backend
+    │
+    ▼
+M-Pesa
+    │
+    ▼
+STK Push
+    │
+    ▼
+Customer Payment
+    │
+    ▼
+M-Pesa Callback
+    │
+    ▼
+Payment Verification
+    │
+    ▼
+Payment COMPLETED
+    │
+    ▼
+Subscription ACTIVE
+    │
+    ▼
+Network Provisioning
+```
+
+### Requirements
+
+* [ ] STK Push
+* [ ] Callback endpoint
+* [ ] Transaction verification
+* [ ] Payment reconciliation
+* [ ] Duplicate callback protection
+* [ ] Failed payment handling
+* [ ] Payment audit trail
+* [ ] Subscription activation
+
+### Critical Rule
+
+The frontend must never determine that a payment succeeded.
+
+Only the backend can confirm payment status.
+
+Payment processing must also be **idempotent**.
+
+If the same callback is received twice, the system must not:
+
+```text
+Create two payments
+Extend a subscription twice
+Provision a customer twice
+```
+
+---
+
+# Phase 6: Automation Engine
+
+## Objective
+
+Move recurring operations into background workers.
+
+Potential automated tasks:
+
+```text
+Subscription Expiration
+Payment Reconciliation
+Network Provisioning
+Provisioning Retries
+Invoice Generation
+Notifications
+```
+
+Architecture:
+
+```text
+                 Go Backend
+                     │
+             ┌───────┴───────┐
+             │               │
+          API Server       Workers
+                             │
+                ┌────────────┼────────────┐
+                ▼            ▼            ▼
+           Expiration     Payments   Provisioning
+```
+
+Redis or another queue system can be introduced when the workload requires it.
+
+---
+
+# Phase 7: Monitoring and Reporting
+
+## Objective
+
+Provide administrators with visibility into the ISP operation.
+
+### Dashboard
+
+```text
+Customers
+Active Customers
+Online Customers
+Expired Customers
+Revenue
+Failed Payments
+Active Subscriptions
+Routers
+Router Status
+```
+
+### Reports
+
+```text
+Daily Revenue
+Monthly Revenue
+Payment History
+Active Subscriptions
+Expired Subscriptions
+Customer Growth
+Package Performance
+Network Sessions
+```
+
+### Router Monitoring
+
+Potential metrics:
+
+```text
+Router Status
+CPU Usage
+Memory Usage
+Uptime
+Active Sessions
+Connectivity
+```
+
+---
+
+# Phase 8: Production Hardening
+
+Before declaring Afritech Online production-ready, implement:
+
+* [ ] HTTPS
+* [ ] Secure secret management
+* [ ] Database backups
+* [ ] Rate limiting
+* [ ] Input validation
+* [ ] RBAC
+* [ ] Audit logging
+* [ ] Security headers
+* [ ] API documentation
+* [ ] Monitoring
+* [ ] Error tracking
+* [ ] Automated testing
+* [ ] CI/CD
+* [ ] Docker deployment
+* [ ] Disaster recovery procedures
+
+The system must also be tested against:
+
+```text
+Payment failures
+Router failures
+Database failures
+Network outages
+Duplicate callbacks
+Authentication failures
+Expired subscriptions
+Partial provisioning failures
+```
+
+---
+
+# MVP Definition
+
+The first serious MVP is **not** the entire platform.
+
+The MVP is the successful completion of the core customer lifecycle:
+
+```text
+Administrator
+      │
+      ▼
+Create Internet Package
+      │
+      ▼
+Create Customer
+      │
+      ▼
+Customer Selects Package
+      │
+      ▼
+Payment
+      │
+      ▼
+Payment Verified
+      │
+      ▼
+Subscription Activated
+      │
+      ▼
+Network Account Provisioned
+      │
+      ▼
+Customer Authenticated
+      │
+      ▼
+Internet Access
+      │
+      ▼
+Subscription Expires
+      │
+      ▼
+Internet Access Disabled
+```
+
+---
+
+# Development Rules
+
+The following rules apply throughout development.
+
+## 1. Backend First
+
+The Go backend must be functional independently of the frontend.
+
+```text
+Go API
+   ↓
+MySQL
+```
+
+The frontend comes afterward.
+
+## 2. Frontend Never Accesses MySQL
+
+Never:
+
+```text
+Next.js → MySQL
+```
+
+Always:
+
+```text
+Next.js → Go API → MySQL
+```
+
+## 3. Frontend Never Controls MikroTik
+
+Never:
+
+```text
+Next.js → MikroTik
+```
+
+Always:
+
+```text
+Next.js
+   ↓
+Go API
+   ↓
+Network Service
+   ↓
+MikroTik
+```
+
+## 4. Separate Network Logic
+
+MikroTik-specific functionality must be isolated behind a network service or adapter.
+
+```text
+Business Logic
+      │
+      ▼
+Network Provisioning Service
+      │
+      ├── MikroTik
+      ├── FreeRADIUS
+      └── Future Network Providers
+```
+
+This allows additional network technologies to be introduced without rewriting the billing system.
+
+## 5. Payment Verification Is Backend Responsibility
+
+Never trust the frontend to report a successful payment.
+
+The backend must verify the payment.
+
+## 6. Secrets Never Enter Git
+
+Never commit:
+
+```text
+.env
+Passwords
+JWT secrets
+M-Pesa credentials
+MikroTik credentials
+RADIUS secrets
+API keys
+```
+
+Use `.env.example` for required configuration names.
+
+---
+
+# Security
+
+Afritech Online will handle customer information, payment information, network credentials, and infrastructure access. Security therefore needs to be part of the architecture from the beginning.
+
+The system must:
+
+* Hash passwords
 * Never store M-Pesa PINs
 * Never expose MikroTik credentials to the frontend
-* Keep secrets in environment variables
-* Validate payment callbacks
-* Authenticate administrative requests
-* Authorize users based on roles
-* Protect API endpoints
+* Store secrets outside source control
+* Validate external callbacks
+* Enforce authorization on the backend
 * Use HTTPS in production
-* Validate all incoming data
+* Validate incoming data
 * Implement rate limiting
-* Log security-sensitive operations
-* Keep database credentials out of source control
+* Maintain audit logs
+* Avoid logging credentials and tokens
+* Use database transactions for financial operations
 
 Example environment configuration:
 
 ```env
-DATABASE_URL=
-SECRET_KEY=
+APP_ENV=development
+APP_PORT=8080
+
+DB_HOST=localhost
+DB_PORT=3306
+DB_NAME=afritechonline
+DB_USER=root
+DB_PASSWORD=
+
+JWT_SECRET=
 
 MPESA_CONSUMER_KEY=
 MPESA_CONSUMER_SECRET=
@@ -400,124 +1055,201 @@ RADIUS_SECRET=
 
 ---
 
-## Development Requirements
-
-Before development begins, install:
-
-* Git
-* Docker
-* Docker Compose
-* PostgreSQL
-* A supported backend runtime
-* Node.js if the frontend uses a JavaScript framework
-
-Clone the repository:
-
-```bash
-git clone https://github.com/Thorium234/afritechonline.git
-cd afritechonline
-```
-
-The development installation instructions will be updated once the backend and frontend have been implemented.
-
----
-
-## Network Architecture
-
-A typical deployment is expected to look similar to:
+# Planned Repository Structure
 
 ```text
-                    INTERNET
-                       │
-                       ▼
-                ┌──────────────┐
-                │    Router    │
-                │   MikroTik   │
-                └──────┬───────┘
-                       │
-          ┌────────────┴────────────┐
-          │                         │
-          ▼                         ▼
-   Customer Traffic          Afritech Server
-                              │
-                  ┌───────────┼───────────┐
-                  │           │           │
-                  ▼           ▼           ▼
-              Backend     PostgreSQL   FreeRADIUS
-                  │
-                  ▼
-             M-Pesa API
+afritechonline/
+│
+├── backend/
+│   ├── cmd/
+│   │   └── server/
+│   │       └── main.go
+│   │
+│   ├── internal/
+│   │   ├── auth/
+│   │   ├── users/
+│   │   ├── customers/
+│   │   ├── packages/
+│   │   ├── subscriptions/
+│   │   ├── billing/
+│   │   ├── payments/
+│   │   ├── mikrotik/
+│   │   ├── radius/
+│   │   ├── sessions/
+│   │   ├── notifications/
+│   │   └── reports/
+│   │
+│   ├── database/
+│   │   ├── migrations/
+│   │   └── seeds/
+│   │
+│   ├── middleware/
+│   ├── routes/
+│   ├── config/
+│   ├── tests/
+│   │
+│   ├── go.mod
+│   └── go.sum
+│
+├── frontend/
+│   ├── app/
+│   ├── components/
+│   ├── hooks/
+│   ├── lib/
+│   ├── services/
+│   ├── types/
+│   ├── public/
+│   └── package.json
+│
+├── infrastructure/
+│   ├── docker/
+│   ├── freeradius/
+│   └── mikrotik/
+│
+├── docs/
+│   ├── architecture.md
+│   ├── database.md
+│   ├── api.md
+│   ├── deployment.md
+│   └── phases.md
+│
+├── scripts/
+│
+├── .env.example
+├── .gitignore
+├── docker-compose.yml
+└── README.md
 ```
-
-The exact network topology will depend on the ISP's infrastructure.
 
 ---
 
-## Important Design Principle
-
-Afritech Online should **not** directly tie every part of the application to MikroTik.
-
-The business logic should operate independently:
+# Development Roadmap
 
 ```text
-Subscription
-Payment
-Customer
-Package
-Billing
-     │
-     ▼
-Network Provisioning Service
-     │
-     ├── MikroTik
-     ├── FreeRADIUS
-     └── Future Network Providers
+┌──────────────────────────────────┐
+│ PHASE 0                          │
+│ Project Foundation               │
+│ Go + MySQL + Configuration       │
+└───────────────┬──────────────────┘
+                │
+                ▼
+┌──────────────────────────────────┐
+│ PHASE 1                          │
+│ Go + MySQL Backend               │
+│ Auth + Customers + Billing       │
+└───────────────┬──────────────────┘
+                │
+                ▼
+┌──────────────────────────────────┐
+│ PHASE 2                          │
+│ Next.js Frontend                 │
+│ Dashboard + Customer Portal      │
+└───────────────┬──────────────────┘
+                │
+                ▼
+┌──────────────────────────────────┐
+│ PHASE 3                          │
+│ MikroTik Integration             │
+│ Connectivity + Provisioning      │
+└───────────────┬──────────────────┘
+                │
+                ▼
+┌──────────────────────────────────┐
+│ PHASE 4                          │
+│ FreeRADIUS                       │
+│ Authentication + Accounting      │
+└───────────────┬──────────────────┘
+                │
+                ▼
+┌──────────────────────────────────┐
+│ PHASE 5                          │
+│ M-Pesa                           │
+│ Payments + Verification          │
+└───────────────┬──────────────────┘
+                │
+                ▼
+┌──────────────────────────────────┐
+│ PHASE 6                          │
+│ Automation Engine                │
+│ Workers + Scheduled Operations   │
+└───────────────┬──────────────────┘
+                │
+                ▼
+┌──────────────────────────────────┐
+│ PHASE 7                          │
+│ Monitoring + Reporting           │
+└───────────────┬──────────────────┘
+                │
+                ▼
+┌──────────────────────────────────┐
+│ PHASE 8                          │
+│ Production Hardening             │
+│ Security + CI/CD + Deployment    │
+└───────────────┬──────────────────┘
+                │
+                ▼
+          AFRITECH ONLINE
+             v1.0.0
 ```
-
-This makes the platform easier to extend to other networking equipment in the future.
 
 ---
 
-## MVP
+# Current Development Target
 
-The first working version should deliberately remain small.
+The immediate target is **Phase 1**.
 
-The MVP target is:
+Do not jump ahead to MikroTik, FreeRADIUS, or M-Pesa before the core backend is reliable.
+
+The current milestone is:
 
 ```text
-1. Administrator creates an internet package
-             ↓
-2. Administrator/customer creates an account
-             ↓
-3. Customer selects a package
-             ↓
-4. Customer makes an M-Pesa payment
-             ↓
-5. Backend verifies payment
-             ↓
-6. Subscription becomes active
-             ↓
-7. Network account is provisioned
-             ↓
-8. Customer authenticates
-             ↓
-9. Customer receives internet
-             ↓
-10. Subscription expires
-             ↓
-11. Internet access is automatically disabled
+Go
+ │
+ ▼
+Gin
+ │
+ ▼
+MySQL
+ │
+ ▼
+Migrations
+ │
+ ▼
+Authentication
+ │
+ ▼
+Customers
+ │
+ ▼
+Internet Packages
+ │
+ ▼
+Subscriptions
+ │
+ ▼
+Invoices
+ │
+ ▼
+Payments
+ │
+ ▼
+Automated Tests
+ │
+ ▼
+PHASE 1 COMPLETE
 ```
 
-If this flow works reliably, Afritech Online has a legitimate technical foundation.
+Once this works reliably, Phase 2 begins.
 
 ---
 
-## Future Features
+# Future Features
 
-Potential future functionality includes:
+Future versions may include:
 
 * Multiple MikroTik routers
-* Multi-ISP support
+* Multiple ISP locations
+* Multi-tenant ISP management
 * Reseller accounts
 * Agent accounts
 * Customer self-service
@@ -534,68 +1266,71 @@ Potential future functionality includes:
 * Usage analytics
 * Revenue reports
 * Automatic invoices
-* Network monitoring
 * Router health monitoring
-* Multiple locations
-* Multi-tenant ISP management
 * Mobile application
 
-These features should only be added after the core billing and network provisioning workflow is stable.
+These features will only be prioritized after the core billing and network provisioning workflow is stable.
 
 ---
 
-## Contributing
+# Contributing
 
-Contributions are welcome once the project reaches the implementation stage.
+Development should follow the phased architecture.
 
-For major changes:
-
-1. Fork the repository.
-2. Create a feature branch.
+Create a feature branch:
 
 ```bash
-git checkout -b feature/my-feature
+git checkout -b feature/customer-management
 ```
 
-3. Make your changes.
-4. Test the changes.
-5. Commit your work.
+Make changes, test them, and commit using a consistent convention:
 
 ```bash
 git commit -m "feat: add customer management"
 ```
 
-6. Push the branch.
+Other examples:
 
-```bash
-git push origin feature/my-feature
+```text
+feat: add subscription management
+feat: implement payment records
+fix: prevent duplicate payment processing
+refactor: separate network provisioning service
+test: add subscription service tests
+docs: update API documentation
 ```
 
-7. Open a pull request.
+Push the branch:
+
+```bash
+git push origin feature/customer-management
+```
+
+Then open a pull request.
 
 ---
 
-## License
+# License
 
 License information will be added when the project's licensing model is finalized.
 
 ---
 
-## Project Status
+# Project Status
 
-Afritech Online is currently under development.
+Afritech Online is under active development.
 
-The repository currently contains the initial system concept, architecture, use cases, and MikroTik configuration research. The production application has not yet been completed.
+The project has moved from initial architecture and planning toward implementation.
 
-The immediate priority is to build and validate the core:
+The development strategy is intentionally incremental:
 
-**Customer → Package → Payment → Subscription → RADIUS → MikroTik → Internet Access**
+**Foundation → Backend → Frontend → MikroTik → FreeRADIUS → M-Pesa → Automation → Monitoring → Production**
 
-Everything else comes after that.
+The immediate objective is to build a reliable Go + MySQL backend before introducing external network and payment dependencies.
 
 ---
 
-## Repository
+# Repository
 
 **GitHub:** https://github.com/Thorium234/afritechonline
 
