@@ -1,0 +1,28 @@
+# Environment
+.env
+*.env
+.env.local
+!.env.example
+
+# Go
+backend/bin/
+backend/vendor/
+
+# Node / Next.js
+node_modules/
+.next/
+out/
+frontend/.next/
+
+# Logs
+*.log
+logs/
+backend/logs/
+
+# OS
+.DS_Store
+
+# IDE
+.idea/
+.vscode/
+.devdb/
