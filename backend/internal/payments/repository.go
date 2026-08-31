@@ -12,9 +12,17 @@ import (
 // ErrNotFound is returned when a payment does not exist.
 var ErrNotFound = errors.New("payment not found")
 
+// DB is implemented by both *sql.DB and *sql.Tx.
+type DB interface {
+	ExecContext(ctx context.Context, query string, args ...interface{}) (sql.Result, error)
+	QueryRowContext(ctx context.Context, query string, args ...interface{}) *sql.Row
+	QueryContext(ctx context.Context, query string, args ...interface{}) (*sql.Rows, error)
+	BeginTx(ctx context.Context, opts *sql.TxOptions) (*sql.Tx, error)
+}
+
 // Repository provides data access for payments.
 type Repository struct {
-	db *sql.DB
+	db DB
 }
 
 // New creates a payment repository.

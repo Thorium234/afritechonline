@@ -42,7 +42,7 @@ func (c *Client) Connect(ctx context.Context) (*ssh.Session, error) {
 		return nil, fmt.Errorf("dial mikrotik: %w", err)
 	}
 
-	sshClient, err := ssh.NewClient(conn, cfg)
+	sshClient, err := ssh.Dial(conn, cfg)
 	if err != nil {
 		conn.Close()
 		return nil, fmt.Errorf("ssh handshake: %w", err)

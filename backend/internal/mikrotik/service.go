@@ -2,7 +2,6 @@ package mikrotik
 
 import (
 	"context"
-	"fmt"
 	"time"
 
 	"github.com/Thorium234/afritechonline/backend/internal/models"

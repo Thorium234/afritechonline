@@ -155,3 +155,18 @@ func (h *Handler) Fail(c *gin.Context) {
 	}
 	response.JSON(c, http.StatusOK, gin.H{"payment": p})
 }
+
+func orDefault(s, def string) string {
+	if s == "" {
+		return def
+	}
+	return s
+}
+
+func validMethod(m string) bool {
+	switch m {
+	case "MANUAL", "MPESA", "CARD", "OTHER":
+		return true
+	}
+	return false
+}
