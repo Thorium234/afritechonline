@@ -3,6 +3,9 @@ set -e
 
 echo "=== Afritech Online Startup ==="
 
+# Ensure Node.js is in PATH for Git Bash
+export PATH="/c/Program Files/nodejs:$PATH"
+
 # Check Go
 if ! command -v go &> /dev/null; then
     echo "ERROR: Go is not installed or not in PATH"
@@ -42,13 +45,13 @@ cd ..
 # Start frontend in background
 echo "[START] Starting frontend on http://localhost:3000 ..."
 cd frontend
-npx next dev &
+npm run dev &
 FRONTEND_PID=$!
 cd ..
 
 # Wait for services to start
 echo "[WAIT] Waiting for services to start..."
-sleep 5
+sleep 8
 
 # Open frontend in default browser
 echo "[OPEN] Opening frontend in browser..."
