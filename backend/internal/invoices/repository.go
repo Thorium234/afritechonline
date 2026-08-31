@@ -38,7 +38,9 @@ func scanInvoice(row interface{ Scan(...any) error }) (*models.Invoice, error) {
 func (r *Repository) NextNumber(ctx context.Context) (string, error) {
 	var seq int64
 	if err := r.db.QueryRowContext(ctx,
-		`SELECT COALESCE(MAX(id), 0) + 1 FROM invoices`).Scan(&seq); err != nil {
+		`INSERT INTO invoice_counters (prefix, next_val) VALUES ('daily', 1)
+		 ON DUPLICATE KEY UPDATE next_val = LAST_INSERT_ID(next_val + 1);
+		 SELECT LAST_INSERT_ID();`).Scan(&seq); err != nil {
 		return "", err
 	}
 	t := time.Now()

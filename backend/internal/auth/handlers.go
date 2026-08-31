@@ -25,7 +25,6 @@ type registerRequest struct {
 	Username string `json:"username"`
 	Email    string `json:"email"`
 	Password string `json:"password"`
-	Role     string `json:"role"`
 }
 
 type loginRequest struct {
@@ -59,13 +58,7 @@ func (h *Handler) Register(c *gin.Context) {
 	if req.Email == "" || !validator.IsValidEmail(req.Email) {
 		fieldErrs["email"] = "a valid email is required"
 	}
-	role := models.Role(req.Role)
-	if role == "" {
-		role = models.RoleCustomer
-	}
-	if !validRole(role) {
-		fieldErrs["role"] = "role must be one of SUPER_ADMIN, ADMIN, STAFF, CUSTOMER"
-	}
+	role := models.RoleCustomer
 	if len(fieldErrs) > 0 {
 		response.Validation(c, fieldErrs)
 		return
@@ -142,10 +135,4 @@ func (h *Handler) Me(c *gin.Context) {
 	response.JSON(c, http.StatusOK, gin.H{"user": user})
 }
 
-func validRole(r models.Role) bool {
-	switch r {
-	case models.RoleSuperAdmin, models.RoleAdmin, models.RoleStaff, models.RoleCustomer:
-		return true
-	}
-	return false
-}
+

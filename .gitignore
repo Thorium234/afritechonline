@@ -3,10 +3,12 @@
 *.env
 .env.local
 !.env.example
+.env.test
 
 # Go
 backend/bin/
 backend/vendor/
+backend/*.db
 
 # Node / Next.js
 node_modules/
@@ -25,4 +27,22 @@ backend/logs/
 # IDE
 .idea/
 .vscode/
-.devdb/
+*.swp
+*.swo
+
+# Test coverage
+coverage.txt
+coverage.html
+
+# Database
+*.sqlite
+*.db
+
+# Temporary files
+tmp/
+temp/
+
+# Build artifacts
+dist/
+build/
+

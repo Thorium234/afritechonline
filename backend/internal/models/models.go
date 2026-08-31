@@ -111,6 +111,13 @@ type Router struct {
 	UpdatedAt   time.Time `json:"updated_at"`
 }
 
+// RouterStatus constants.
+const (
+	RouterStatusOffline = "OFFLINE"
+	RouterStatusOnline  = "ONLINE"
+	RouterStatusUnknown = "UNKNOWN"
+)
+
 // AuditLog records sensitive administrative actions.
 type AuditLog struct {
 	ID        uint64    `json:"id"`

@@ -3,6 +3,7 @@ package database
 import (
 	"database/sql"
 	"fmt"
+	"os"
 
 	"github.com/Thorium234/afritechonline/backend/internal/models"
 	"golang.org/x/crypto/bcrypt"
@@ -18,7 +19,12 @@ func Seed(db *sql.DB) error {
 		return err
 	}
 	if count == 0 {
-		hash, err := bcrypt.GenerateFromPassword([]byte("admin123"), bcrypt.DefaultCost)
+		password := getEnv("SEED_ADMIN_PASSWORD", "")
+		if password == "" {
+			fmt.Println("SEED_ADMIN_PASSWORD not set; skipping default admin seed")
+			return nil
+		}
+		hash, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 		if err != nil {
 			return err
 		}
@@ -28,7 +34,7 @@ func Seed(db *sql.DB) error {
 		if err != nil {
 			return fmt.Errorf("seed admin: %w", err)
 		}
-		fmt.Println("seeded default admin: admin / admin123")
+		fmt.Println("seeded default admin: admin / [password from SEED_ADMIN_PASSWORD]")
 	}
 	return nil
 }
@@ -57,4 +63,11 @@ func seedPackages(db *sql.DB) {
 			fmt.Println("seed package error:", err)
 		}
 	}
+}
+
+func getEnv(key, def string) string {
+	if v, ok := os.LookupEnv(key); ok && v != "" {
+		return v
+	}
+	return def
 }

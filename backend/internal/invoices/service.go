@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"fmt"
 
 	"github.com/Thorium234/afritechonline/backend/internal/models"
 )
@@ -39,11 +40,6 @@ func (s *Service) CreateForSubscription(ctx context.Context, subID uint64) (*mod
 		return nil, err
 	}
 
-	// Avoid duplicate invoices for the same subscription.
-	if existing, err := s.repo.GetBySubscription(ctx, subID); err == nil {
-		return existing, nil
-	}
-
 	number, err := s.repo.NextNumber(ctx)
 	if err != nil {
 		return nil, err
@@ -57,7 +53,14 @@ func (s *Service) CreateForSubscription(ctx context.Context, subID uint64) (*mod
 		Status:         StatusPending,
 		DueDate:        sub.ExpiryDate,
 	}
-	return s.repo.Create(ctx, inv)
+	created, err := s.repo.Create(ctx, inv)
+	if err != nil {
+		if isDuplicateSubscription(err) {
+			return s.repo.GetBySubscription(ctx, subID)
+		}
+		return nil, err
+	}
+	return created, nil
 }
 
 // Get returns an invoice.
@@ -84,4 +87,24 @@ func (s *Service) List(ctx context.Context, customerID uint64, status string, pa
 // MarkPaid flags an invoice as paid.
 func (s *Service) MarkPaid(ctx context.Context, id uint64) error {
 	return s.repo.MarkPaid(ctx, id)
+}
+
+func isDuplicateSubscription(err error) bool {
+	if err == nil {
+		return false
+	}
+	return errors.Is(err, sql.ErrNoRows) == false && (contains(err.Error(), "Duplicate") || contains(err.Error(), "uq_invoice_subscription"))
+}
+
+func contains(s, substr string) bool {
+	return len(s) >= len(substr) && (s == substr || len(s) > 0 && containsAt(s, substr))
+}
+
+func containsAt(s, substr string) bool {
+	for i := 0; i <= len(s)-len(substr); i++ {
+		if s[i:i+len(substr)] == substr {
+			return true
+		}
+	}
+	return false
 }

@@ -124,3 +124,13 @@ func (r *Repository) MarkFailed(ctx context.Context, id uint64) error {
 		`UPDATE payments SET status = 'FAILED' WHERE id = ?`, id)
 	return err
 }
+
+// Begin starts a transaction.
+func (r *Repository) Begin(ctx context.Context) (*sql.Tx, error) {
+	return r.db.BeginTx(ctx, nil)
+}
+
+// WithTx returns a repository bound to the provided transaction.
+func (r *Repository) WithTx(tx *sql.Tx) *Repository {
+	return &Repository{db: tx}
+}

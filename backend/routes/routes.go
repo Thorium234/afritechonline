@@ -1,8 +1,10 @@
 package routes
 
 import (
+	"context"
 	"database/sql"
 	"net/http"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/rs/zerolog"
@@ -11,9 +13,12 @@ import (
 	"github.com/Thorium234/afritechonline/backend/internal/auth"
 	"github.com/Thorium234/afritechonline/backend/internal/customers"
 	"github.com/Thorium234/afritechonline/backend/internal/invoices"
+	"github.com/Thorium234/afritechonline/backend/internal/mikrotik"
 	"github.com/Thorium234/afritechonline/backend/internal/models"
 	"github.com/Thorium234/afritechonline/backend/internal/packages"
 	"github.com/Thorium234/afritechonline/backend/internal/payments"
+	"github.com/Thorium234/afritechonline/backend/internal/radius"
+	"github.com/Thorium234/afritechonline/backend/internal/reports"
 	"github.com/Thorium234/afritechonline/backend/internal/subscriptions"
 	"github.com/Thorium234/afritechonline/backend/internal/users"
 	"github.com/Thorium234/afritechonline/backend/middleware"
@@ -28,6 +33,12 @@ func Setup(db *sql.DB, cfg *config.Config, log zerolog.Logger) *gin.Engine {
 	r := gin.New()
 	r.Use(gin.Recovery())
 	r.Use(middleware.RequestLogger(log))
+	r.Use(middleware.SecurityHeaders())
+	r.Use(middleware.CORSMiddleware([]string{cfg.BaseURL}))
+
+	if cfg.Env == "production" {
+		r.Use(middleware.RequestTimeout(15 * time.Second))
+	}
 
 	// Health
 	r.GET("/health", func(c *gin.Context) {
@@ -41,6 +52,7 @@ func Setup(db *sql.DB, cfg *config.Config, log zerolog.Logger) *gin.Engine {
 	subscriptionRepo := subscriptions.New(db)
 	invoiceRepo := invoices.New(db)
 	paymentRepo := payments.New(db)
+	routerRepo := mikrotik.New(db)
 
 	// ---- Services ----
 	tokens := token.New(cfg.JWTSecret, cfg.AccessTTL, cfg.RefreshTTL)
@@ -52,6 +64,13 @@ func Setup(db *sql.DB, cfg *config.Config, log zerolog.Logger) *gin.Engine {
 	subscriptionService := subscriptions.NewService(subscriptionRepo, packageService, customerService)
 	invoiceService := invoices.NewService(invoiceRepo, subscriptionService)
 	paymentService := payments.NewService(paymentRepo, invoiceService, subscriptionService)
+	routerService := mikrotik.NewService(routerRepo, mikrotik.NewClient("", "", "", 5))
+	radiusRepo := radius.New(db)
+	radiusService := radius.NewService(radiusRepo)
+	mpesaClient := mpesa.NewClient(&mpesa.Config{})
+	mpesaService := mpesa.NewService(mpesaClient, paymentRepo, invoiceRepo, subscriptionService)
+	reportsRepo := reports.New(db)
+	reportsService := reports.NewService(reportsRepo)
 
 	// ---- Handlers ----
 	authHandler := auth.NewHandler(authService)
@@ -60,6 +79,10 @@ func Setup(db *sql.DB, cfg *config.Config, log zerolog.Logger) *gin.Engine {
 	subscriptionHandler := subscriptions.NewHandler(subscriptionService)
 	invoiceHandler := invoices.NewHandler(invoiceService)
 	paymentHandler := payments.NewHandler(paymentService)
+	routerHandler := mikrotik.NewHandler(routerService)
+	radiusHandler := radius.NewHandler(radiusService)
+	mpesaHandler := mpesa.NewHandler(mpesaService)
+	reportsHandler := reports.NewHandler(reportsService)
 
 	// ---- Middleware ----
 	authMW := middleware.NewAuthMiddleware(tokens, userRepo)
@@ -68,8 +91,13 @@ func Setup(db *sql.DB, cfg *config.Config, log zerolog.Logger) *gin.Engine {
 
 	v1 := r.Group("/api/v1")
 
-	// Auth (public)
-	a := v1.Group("/auth")
+	// Public rate limiting for auth endpoints.
+	publicRateLimiter := middleware.NewRateLimiter(20, time.Minute)
+	a.Use(publicRateLimiter.Limit())
+
+	// Stricter rate limiting for public endpoints.
+	strictLimiter := middleware.NewRateLimiter(5, time.Minute)
+	a.Use(strictLimiter.Limit())
 	{
 		a.POST("/register", authHandler.Register)
 		a.POST("/login", authHandler.Login)
@@ -125,4 +153,45 @@ func Setup(db *sql.DB, cfg *config.Config, log zerolog.Logger) *gin.Engine {
 		payments.POST("", staffOnly, paymentHandler.Create)
 		payments.GET("/:id", paymentHandler.Get)
 		payments.POST("/:id/complete", staffOnly, paymentHandler.Complete)
-		payments.POST(
+		payments.POST("/:id/fail", staffOnly, paymentHandler.Fail)
+	}
+
+	// Routers (MikroTik)
+	routers := protected.Group("/routers")
+	{
+		routers.GET("", staffOnly, routerHandler.List)
+		routers.POST("", staffOnly, routerHandler.Create)
+		routers.GET("/:id", staffOnly, routerHandler.Get)
+		routers.PUT("/:id", staffOnly, routerHandler.Update)
+		routers.DELETE("/:id", adminOnly, routerHandler.Delete)
+		routers.POST("/:id/test", staffOnly, routerHandler.TestConnection)
+		routers.GET("/:id/status", staffOnly, routerHandler.Status)
+	}
+
+	// M-Pesa
+	mpesa := protected.Group("/payments/mpesa")
+	{
+		mpesa.POST("/stkpush", paymentHandler.STKPush)
+		mpesa.POST("/callback", paymentHandler.Callback)
+	}
+
+	// RADIUS
+	radius := protected.Group("/radius")
+	{
+		radius.GET("/users", staffOnly, radiusHandler.List)
+		radius.GET("/users/:username", staffOnly, radiusHandler.Get)
+		radius.POST("/users", staffOnly, radiusHandler.Create)
+		radius.PUT("/users/:username", staffOnly, radiusHandler.Update)
+		radius.DELETE("/users/:username", adminOnly, radiusHandler.Delete)
+	}
+
+	// Reports
+	reports := protected.Group("/reports")
+	{
+		reports.GET("/revenue", staffOnly, reportsHandler.RevenueSummary)
+		reports.GET("/customers", staffOnly, reportsHandler.CustomerStats)
+		reports.GET("/routers", staffOnly, reportsHandler.ActiveRouters)
+	}
+
+	return r
+}

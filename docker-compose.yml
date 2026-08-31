@@ -43,5 +43,14 @@ services:
     depends_on:
       - backend
 
+  nginx:
+    build:
+      context: ./infrastructure/nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+
 volumes:
   dbdata:

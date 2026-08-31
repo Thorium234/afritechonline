@@ -71,8 +71,9 @@ func (s *Service) List(ctx context.Context, customerID uint64, status string, pa
 }
 
 // Complete marks a payment COMPLETED and, if it was not already completed,
-// marks the invoice PAID and activates the subscription. Idempotent: a second
-// call for an already COMPLETED payment is a no-op.
+// marks the invoice PAID and activates the subscription. The entire flow runs
+// inside a single transaction so partial failures cannot leave the system in
+// an inconsistent state.
 func (s *Service) Complete(ctx context.Context, paymentID uint64) (*models.Payment, error) {
 	p, err := s.repo.GetByID(ctx, paymentID)
 	if err != nil {
@@ -85,24 +86,32 @@ func (s *Service) Complete(ctx context.Context, paymentID uint64) (*models.Payme
 		return nil, ErrInvalidState
 	}
 
-	if err := s.repo.MarkCompleted(ctx, p.ID); err != nil {
-		return nil, err
+	tx, err := s.repo.Begin(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("begin tx: %w", err)
+	}
+	defer tx.Rollback()
+
+	if err := s.repo.WithTx(tx).MarkCompleted(ctx, p.ID); err != nil {
+		return nil, fmt.Errorf("mark payment completed: %w", err)
 	}
 
-	// Mark the invoice paid (idempotent-friendly).
 	inv, err := s.invoices.Get(ctx, p.InvoiceID)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("load invoice: %w", err)
 	}
 	if inv.Status != "PAID" {
 		if err := s.invoices.MarkPaid(ctx, inv.ID); err != nil {
-			return nil, err
+			return nil, fmt.Errorf("mark invoice paid: %w", err)
 		}
 	}
 
-	// Activate the subscription (idempotent inside the subscription service).
 	if _, err := s.subscriptions.Activate(ctx, inv.SubscriptionID); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("activate subscription: %w", err)
+	}
+
+	if err := tx.Commit(); err != nil {
+		return nil, fmt.Errorf("commit tx: %w", err)
 	}
 
 	return s.repo.GetByID(ctx, p.ID)
