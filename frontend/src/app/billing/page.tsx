@@ -25,36 +25,40 @@ export default function BillingPage() {
       })
   }, [])
 
-  if (loading) return <div className="p-8">Loading...</div>
+  if (loading) return <div className="p-8 text-slate">Loading...</div>
 
   return (
     <div className="p-8">
-      <h1 className="text-2xl font-bold mb-6">Billing</h1>
-      <div className="bg-white shadow rounded">
+      <h1 className="text-2xl font-bold mb-6 text-pearl">Billing</h1>
+      <div className="card overflow-hidden">
         <table className="min-w-full">
-          <thead className="bg-gray-50">
+          <thead className="bg-obsidian-dark">
             <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Invoice</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Subscription</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Amount</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Due Date</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-slate uppercase tracking-wider">Invoice</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-slate uppercase tracking-wider">Subscription</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-slate uppercase tracking-wider">Amount</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-slate uppercase tracking-wider">Status</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-slate uppercase tracking-wider">Due Date</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-gray-200">
+          <tbody className="divide-y divide-white/5">
             {invoices.map((inv) => (
-              <tr key={inv.id}>
-                <td className="px-6 py-4">{inv.invoice_no}</td>
-                <td className="px-6 py-4">{inv.subscription_id}</td>
-                <td className="px-6 py-4">
+              <tr key={inv.id} className="hover:bg-white/5 transition-colors">
+                <td className="px-6 py-4 text-pearl">{inv.invoice_no}</td>
+                <td className="px-6 py-4 text-pearl">{inv.subscription_id}</td>
+                <td className="px-6 py-4 text-pearl">
                   {inv.currency} {inv.amount.toLocaleString()}
                 </td>
                 <td className="px-6 py-4">
-                  <span className={`px-2 py-1 rounded text-xs ${inv.status === 'PAID' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}`}>
+                  <span className={`px-2 py-1 rounded text-xs font-medium ${
+                    inv.status === 'PAID'
+                      ? 'bg-acid-lime/20 text-acid-lime border border-acid-lime/30'
+                      : 'bg-white/5 text-slate border border-white/10'
+                  }`}>
                     {inv.status}
                   </span>
                 </td>
-                <td className="px-6 py-4">{new Date(inv.due_date).toLocaleDateString()}</td>
+                <td className="px-6 py-4 text-pearl">{new Date(inv.due_date).toLocaleDateString()}</td>
               </tr>
             ))}
           </tbody>

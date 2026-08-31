@@ -15,40 +15,39 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const pathname = usePathname()
 
   return (
-    <div className="flex min-h-screen bg-gray-50">
-      <aside className="w-64 bg-white shadow">
+    <div className="flex min-h-screen bg-obsidian">
+      <aside className="w-64 bg-obsidian-light border-r border-white/10 flex flex-col">
         <div className="p-6">
-          <h1 className="text-xl font-bold text-blue-600">Afritech Online</h1>
+          <h1 className="text-xl font-bold text-acid-lime">Afritech Online</h1>
+          <p className="text-xs text-slate mt-1">ISP Management</p>
         </div>
-        <nav className="mt-6">
+        <nav className="flex-1 mt-6">
           {navItems.map((item) => (
             <Link
               key={item.href}
               href={item.href}
-              className={`block px-6 py-3 text-sm font-medium ${
-                pathname === item.href
-                  ? 'text-blue-600 bg-blue-50 border-r-4 border-blue-600'
-                  : 'text-gray-600 hover:bg-gray-50'
+              className={`nav-item block px-6 py-3 text-sm font-medium ${
+                pathname === item.href ? 'active' : ''
               }`}
             >
               {item.label}
             </Link>
           ))}
         </nav>
-        <div className="absolute bottom-0 w-64 p-6">
+        <div className="p-6">
           <button
             onClick={() => {
               localStorage.removeItem('access_token')
               localStorage.removeItem('refresh_token')
               window.location.href = '/login'
             }}
-            className="text-sm text-red-600 hover:text-red-700"
+            className="text-sm text-red-400 hover:text-red-300 transition-colors"
           >
             Logout
           </button>
         </div>
       </aside>
-      <main className="flex-1">{children}</main>
+      <main className="flex-1 bg-obsidian">{children}</main>
     </div>
   )
 }

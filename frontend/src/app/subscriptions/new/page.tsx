@@ -54,12 +54,16 @@ export default function NewSubscriptionPage() {
 
   return (
     <div className="p-8 max-w-2xl">
-      <h1 className="text-2xl font-bold mb-6">New Subscription</h1>
-      {message && <p className="text-red-600 mb-4">{message}</p>}
-      <form onSubmit={handleSubmit} className="space-y-4 bg-white p-6 rounded shadow">
+      <h1 className="text-2xl font-bold mb-6 text-pearl">New Subscription</h1>
+      {message && (
+        <div className="mb-4 p-3 rounded bg-red-900/20 border border-red-500/30 text-red-400 text-sm">
+          {message}
+        </div>
+      )}
+      <form onSubmit={handleSubmit} className="card p-6 space-y-4">
         <div>
-          <label className="block text-sm font-medium mb-1">Customer</label>
-          <select className="w-full border rounded p-2" value={customerId} onChange={(e) => setCustomerId(e.target.value)} required>
+          <label className="block text-sm font-medium mb-2 text-pearl">Customer</label>
+          <select className="input-field" value={customerId} onChange={(e) => setCustomerId(e.target.value)} required>
             <option value="">Select customer</option>
             {customers.map((c) => (
               <option key={c.id} value={c.id}>{c.full_name} ({c.username})</option>
@@ -67,15 +71,15 @@ export default function NewSubscriptionPage() {
           </select>
         </div>
         <div>
-          <label className="block text-sm font-medium mb-1">Package</label>
-          <select className="w-full border rounded p-2" value={packageId} onChange={(e) => setPackageId(e.target.value)} required>
+          <label className="block text-sm font-medium mb-2 text-pearl">Package</label>
+          <select className="input-field" value={packageId} onChange={(e) => setPackageId(e.target.value)} required>
             <option value="">Select package</option>
             {packages.map((p) => (
               <option key={p.id} value={p.id}>{p.name} - {p.currency} {p.price} ({p.duration_days} days)</option>
             ))}
           </select>
         </div>
-        <button type="submit" className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
+        <button type="submit" className="btn-primary">
           Create Subscription
         </button>
       </form>

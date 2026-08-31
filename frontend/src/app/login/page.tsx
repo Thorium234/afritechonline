@@ -30,31 +30,36 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50">
-      <form onSubmit={handleSubmit} className="max-w-md w-full bg-white p-8 rounded shadow">
-        <h1 className="text-2xl font-bold mb-6">Afritech Online Login</h1>
-        {error && <p className="text-red-600 mb-4">{error}</p>}
+    <div className="min-h-screen flex items-center justify-center bg-obsidian">
+      <form onSubmit={handleSubmit} className="max-w-md w-full card p-8">
+        <h1 className="text-3xl font-bold mb-2 text-pearl">Afritech Online</h1>
+        <p className="text-slate mb-8 text-sm">ISP Management Platform</p>
+        {error && (
+          <div className="mb-4 p-3 rounded bg-red-900/20 border border-red-500/30 text-red-400 text-sm">
+            {error}
+          </div>
+        )}
         <div className="mb-4">
-          <label className="block text-sm font-medium mb-1">Username or Email</label>
+          <label className="block text-sm font-medium mb-2 text-pearl">Username or Email</label>
           <input
             type="text"
             value={identifier}
             onChange={(e) => setIdentifier(e.target.value)}
-            className="w-full border rounded p-2"
+            className="input-field"
             required
           />
         </div>
         <div className="mb-6">
-          <label className="block text-sm font-medium mb-1">Password</label>
+          <label className="block text-sm font-medium mb-2 text-pearl">Password</label>
           <input
             type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className="w-full border rounded p-2"
+            className="input-field"
             required
           />
         </div>
-        <button type="submit" className="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700">
+        <button type="submit" className="btn-primary w-full">
           Login
         </button>
       </form>

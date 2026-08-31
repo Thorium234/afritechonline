@@ -31,34 +31,38 @@ export default function CustomersPage() {
     setLoading(false)
   }
 
-  if (loading) return <div className="p-8">Loading...</div>
+  if (loading) return <div className="p-8 text-slate">Loading...</div>
 
   return (
     <div className="p-8">
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold">Customers</h1>
-        <a href="/customers/new" className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
+        <h1 className="text-2xl font-bold text-pearl">Customers</h1>
+        <a href="/customers/new" className="btn-primary">
           New Customer
         </a>
       </div>
-      <div className="bg-white shadow rounded">
+      <div className="card overflow-hidden">
         <table className="min-w-full">
-          <thead className="bg-gray-50">
+          <thead className="bg-obsidian-dark">
             <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Name</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Phone</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Email</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-slate uppercase tracking-wider">Name</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-slate uppercase tracking-wider">Phone</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-slate uppercase tracking-wider">Email</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-slate uppercase tracking-wider">Status</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-gray-200">
+          <tbody className="divide-y divide-white/5">
             {customers.map((c) => (
-              <tr key={c.id}>
-                <td className="px-6 py-4">{c.full_name}</td>
-                <td className="px-6 py-4">{c.phone}</td>
-                <td className="px-6 py-4">{c.email}</td>
+              <tr key={c.id} className="hover:bg-white/5 transition-colors">
+                <td className="px-6 py-4 text-pearl">{c.full_name}</td>
+                <td className="px-6 py-4 text-pearl">{c.phone}</td>
+                <td className="px-6 py-4 text-pearl">{c.email}</td>
                 <td className="px-6 py-4">
-                  <span className={`px-2 py-1 rounded text-xs ${c.status === 'ACTIVE' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}`}>
+                  <span className={`px-2 py-1 rounded text-xs font-medium ${
+                    c.status === 'ACTIVE'
+                      ? 'bg-acid-lime/20 text-acid-lime border border-acid-lime/30'
+                      : 'bg-white/5 text-slate border border-white/10'
+                  }`}>
                     {c.status}
                   </span>
                 </td>

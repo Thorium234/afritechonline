@@ -26,34 +26,38 @@ export default function SubscriptionsPage() {
       })
   }, [])
 
-  if (loading) return <div className="p-8">Loading...</div>
+  if (loading) return <div className="p-8 text-slate">Loading...</div>
 
   return (
     <div className="p-8">
-      <h1 className="text-2xl font-bold mb-6">Subscriptions</h1>
-      <div className="bg-white shadow rounded">
+      <h1 className="text-2xl font-bold mb-6 text-pearl">Subscriptions</h1>
+      <div className="card overflow-hidden">
         <table className="min-w-full">
-          <thead className="bg-gray-50">
+          <thead className="bg-obsidian-dark">
             <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">ID</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Customer</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Package</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Expires</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-slate uppercase tracking-wider">ID</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-slate uppercase tracking-wider">Customer</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-slate uppercase tracking-wider">Package</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-slate uppercase tracking-wider">Status</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-slate uppercase tracking-wider">Expires</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-gray-200">
+          <tbody className="divide-y divide-white/5">
             {subscriptions.map((sub) => (
-              <tr key={sub.id}>
-                <td className="px-6 py-4">{sub.id}</td>
-                <td className="px-6 py-4">{sub.customer_id}</td>
-                <td className="px-6 py-4">{sub.package_id}</td>
+              <tr key={sub.id} className="hover:bg-white/5 transition-colors">
+                <td className="px-6 py-4 text-pearl">{sub.id}</td>
+                <td className="px-6 py-4 text-pearl">{sub.customer_id}</td>
+                <td className="px-6 py-4 text-pearl">{sub.package_id}</td>
                 <td className="px-6 py-4">
-                  <span className={`px-2 py-1 rounded text-xs ${sub.status === 'ACTIVE' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}`}>
+                  <span className={`px-2 py-1 rounded text-xs font-medium ${
+                    sub.status === 'ACTIVE'
+                      ? 'bg-acid-lime/20 text-acid-lime border border-acid-lime/30'
+                      : 'bg-white/5 text-slate border border-white/10'
+                  }`}>
                     {sub.status}
                   </span>
                 </td>
-                <td className="px-6 py-4">{new Date(sub.expiry_date).toLocaleDateString()}</td>
+                <td className="px-6 py-4 text-pearl">{new Date(sub.expiry_date).toLocaleDateString()}</td>
               </tr>
             ))}
           </tbody>

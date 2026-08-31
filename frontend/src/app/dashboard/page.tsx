@@ -30,27 +30,27 @@ export default function DashboardPage() {
       })
   }, [])
 
-  if (loading) return <div className="p-8">Loading...</div>
+  if (loading) return <div className="p-8 text-slate">Loading...</div>
 
   return (
     <div className="p-8">
-      <h1 className="text-2xl font-bold mb-6">Dashboard</h1>
+      <h1 className="text-3xl font-bold mb-8 text-pearl">Dashboard</h1>
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <div className="bg-white p-6 rounded shadow">
-          <div className="text-sm text-gray-500">Total Customers</div>
-          <div className="text-3xl font-bold">{stats?.totalCustomers || 0}</div>
+        <div className="card p-6">
+          <div className="text-sm text-slate mb-1">Total Customers</div>
+          <div className="text-4xl font-bold text-pearl">{stats?.totalCustomers || 0}</div>
         </div>
-        <div className="bg-white p-6 rounded shadow">
-          <div className="text-sm text-gray-500">Active Customers</div>
-          <div className="text-3xl font-bold text-green-600">{stats?.activeCustomers || 0}</div>
+        <div className="card p-6">
+          <div className="text-sm text-slate mb-1">Active Customers</div>
+          <div className="text-4xl font-bold text-acid-lime">{stats?.activeCustomers || 0}</div>
         </div>
-        <div className="bg-white p-6 rounded shadow">
-          <div className="text-sm text-gray-500">Active Packages</div>
-          <div className="text-3xl font-bold text-blue-600">{stats?.activePackages || 0}</div>
+        <div className="card p-6">
+          <div className="text-sm text-slate mb-1">Active Packages</div>
+          <div className="text-4xl font-bold text-pearl">{stats?.activePackages || 0}</div>
         </div>
-        <div className="bg-white p-6 rounded shadow">
-          <div className="text-sm text-gray-500">Pending Payments</div>
-          <div className="text-3xl font-bold text-yellow-600">{stats?.pendingPayments || 0}</div>
+        <div className="card p-6">
+          <div className="text-sm text-slate mb-1">Pending Payments</div>
+          <div className="text-4xl font-bold text-acid-lime">{stats?.pendingPayments || 0}</div>
         </div>
       </div>
     </div>
