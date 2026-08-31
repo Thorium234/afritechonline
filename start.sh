@@ -42,7 +42,7 @@ cd ..
 # Start frontend in background
 echo "[START] Starting frontend on http://localhost:3000 ..."
 cd frontend
-npm run dev &
+npx next dev &
 FRONTEND_PID=$!
 cd ..
 
