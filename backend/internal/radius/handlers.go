@@ -5,6 +5,8 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+
+	"github.com/Thorium234/afritechonline/backend/internal/models"
 )
 
 // Handler exposes radius HTTP endpoints.
@@ -62,8 +64,18 @@ func (h *Handler) Update(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": gin.H{"message": "invalid request body", "status": http.StatusBadRequest}})
 		return
 	}
-	// Implementation continues...
-	c.JSON(http.StatusOK, gin.H{"data": gin.H{"user": nil}})
+	user := &models.RadiusUser{
+		Username: username,
+		Password: req.Password,
+		Profile:  req.Profile,
+		Speed:    req.Speed,
+	}
+	updated, err := h.service.UpdateUser(c.Request.Context(), user)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": gin.H{"message": err.Error(), "status": http.StatusInternalServerError}})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"data": gin.H{"user": updated}})
 }
 
 // Delete removes a RADIUS user.

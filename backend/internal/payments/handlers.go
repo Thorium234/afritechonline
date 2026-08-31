@@ -141,4 +141,17 @@ func (h *Handler) Complete(c *gin.Context) {
 func (h *Handler) Fail(c *gin.Context) {
 	id, err := strconv.ParseUint(c.Param("id"), 10, 64)
 	if err != nil {
-		response.Err
+		response.Err(c, http.StatusBadRequest, err)
+		return
+	}
+	p, err := h.service.Get(c.Request.Context(), id)
+	if err != nil {
+		if errors.Is(err, ErrNotFound) {
+			response.Error(c, http.StatusNotFound, "payment not found")
+			return
+		}
+		response.Err(c, http.StatusInternalServerError, err)
+		return
+	}
+	response.JSON(c, http.StatusOK, gin.H{"payment": p})
+}

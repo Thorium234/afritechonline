@@ -129,3 +129,22 @@ type AuditLog struct {
 	Metadata  string    `json:"metadata,omitempty"`
 	CreatedAt time.Time `json:"created_at"`
 }
+
+// RevenueSummary represents revenue grouped by date.
+type RevenueSummary struct {
+	Date  string  `json:"date"`
+	Total float64 `json:"total"`
+	Count int64   `json:"count"`
+}
+
+// RadiusUser represents a RADIUS user.
+type RadiusUser struct {
+	ID         uint64     `json:"id"`
+	Username   string     `json:"username"`
+	Password   string     `json:"-"`
+	Profile    string     `json:"profile"`
+	Speed      string     `json:"speed"`
+	ExpiryDate *time.Time `json:"expiry_date,omitempty"`
+	CreatedAt  time.Time  `json:"created_at"`
+	UpdatedAt  time.Time  `json:"updated_at"`
+}

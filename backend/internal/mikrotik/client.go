@@ -1,11 +1,11 @@
 package mikrotik
 
 import (
+	"context"
 	"fmt"
 	"net"
 	"time"
 
-	"github.com/Thorium234/afritechonline/backend/pkg/contextutil"
 	"golang.org/x/crypto/ssh"
 )
 
@@ -42,13 +42,12 @@ func (c *Client) Connect(ctx context.Context) (*ssh.Session, error) {
 		return nil, fmt.Errorf("dial mikrotik: %w", err)
 	}
 
-	client, err := ssh.NewClientConn(conn, addr, cfg)
+	sshClient, err := ssh.NewClient(conn, cfg)
 	if err != nil {
 		conn.Close()
 		return nil, fmt.Errorf("ssh handshake: %w", err)
 	}
 
-	sshClient := ssh.NewClient(client, nil)
 	session, err := sshClient.NewSession()
 	if err != nil {
 		sshClient.Close()
