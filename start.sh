@@ -27,31 +27,34 @@ if ! command -v npm &> /dev/null; then
 fi
 echo "[OK] npm found: $(npm -v)"
 
-# Clean and install frontend dependencies
-echo "[INFO] Installing frontend dependencies..."
-cd frontend
-rm -rf node_modules .next
-npm install
-cd ..
+# Install frontend dependencies only if missing
+if [ ! -d "frontend/node_modules" ]; then
+    echo "[INFO] Installing frontend dependencies..."
+    cd frontend
+    npm install
+    cd ..
+else
+    echo "[OK] Frontend dependencies already installed"
+fi
 
-# Start backend in background with retry for Go module downloads
+# Start backend in background
 echo "[START] Starting backend on http://localhost:8080 ..."
 cd backend
-for i in 1 2 3; do
-    echo "[BACKEND] Attempt $i: starting..."
-    go run ./cmd/server &
-    BACKEND_PID=$!
-    sleep 3
-    if kill -0 $BACKEND_PID 2>/dev/null; then
-        echo "[BACKEND] Started successfully"
-        break
-    else
-        echo "[BACKEND] Attempt $i failed, retrying..."
-        kill $BACKEND_PID 2>/dev/null || true
-        sleep 2
-    fi
-done
+go run ./cmd/server &
+BACKEND_PID=$!
 cd ..
+
+# Wait for backend to start and apply migrations
+echo "[WAIT] Waiting for backend to start..."
+sleep 5
+
+# Check if backend is running
+if ! kill -0 $BACKEND_PID 2>/dev/null; then
+    echo "[ERROR] Backend failed to start. Check the output above."
+    exit 1
+fi
+
+echo "[OK] Backend started. Migrations applied."
 
 # Start frontend in background
 echo "[START] Starting frontend on http://localhost:3000 ..."
@@ -60,8 +63,8 @@ npm run dev &
 FRONTEND_PID=$!
 cd ..
 
-# Wait for services to start
-echo "[WAIT] Waiting for services to start..."
+# Wait for frontend to start
+echo "[WAIT] Waiting for frontend to start..."
 sleep 8
 
 # Check if frontend is running
@@ -69,7 +72,7 @@ if kill -0 $FRONTEND_PID 2>/dev/null; then
     echo "[OPEN] Opening frontend in browser..."
     start http://localhost:3000
 else
-    echo "[WARN] Frontend failed to start. Check output above."
+    echo "[WARN] Frontend failed to start. Check the output above."
 fi
 
 echo ""
