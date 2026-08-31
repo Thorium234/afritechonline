@@ -27,19 +27,30 @@ if ! command -v npm &> /dev/null; then
 fi
 echo "[OK] npm found: $(npm -v)"
 
-# Install frontend dependencies if needed
-if [ ! -d "frontend/node_modules" ]; then
-    echo "[INFO] Installing frontend dependencies..."
-    cd frontend
-    npm install
-    cd ..
-fi
+# Clean and install frontend dependencies
+echo "[INFO] Installing frontend dependencies..."
+cd frontend
+rm -rf node_modules .next
+npm install
+cd ..
 
-# Start backend in background
+# Start backend in background with retry for Go module downloads
 echo "[START] Starting backend on http://localhost:8080 ..."
 cd backend
-go run ./cmd/server &
-BACKEND_PID=$!
+for i in 1 2 3; do
+    echo "[BACKEND] Attempt $i: starting..."
+    go run ./cmd/server &
+    BACKEND_PID=$!
+    sleep 3
+    if kill -0 $BACKEND_PID 2>/dev/null; then
+        echo "[BACKEND] Started successfully"
+        break
+    else
+        echo "[BACKEND] Attempt $i failed, retrying..."
+        kill $BACKEND_PID 2>/dev/null || true
+        sleep 2
+    fi
+done
 cd ..
 
 # Start frontend in background
@@ -53,9 +64,13 @@ cd ..
 echo "[WAIT] Waiting for services to start..."
 sleep 8
 
-# Open frontend in default browser
-echo "[OPEN] Opening frontend in browser..."
-start http://localhost:3000
+# Check if frontend is running
+if kill -0 $FRONTEND_PID 2>/dev/null; then
+    echo "[OPEN] Opening frontend in browser..."
+    start http://localhost:3000
+else
+    echo "[WARN] Frontend failed to start. Check output above."
+fi
 
 echo ""
 echo "=== Afritech Online is running ==="
