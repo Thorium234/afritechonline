@@ -37,14 +37,8 @@ func (c *Client) Connect(ctx context.Context) (*ssh.Session, error) {
 	}
 
 	addr := net.JoinHostPort(c.host, fmt.Sprintf("%d", 8728))
-	conn, err := dialContext(ctx, "tcp", addr, cfg.Timeout)
+	sshClient, err := ssh.Dial("tcp", addr, cfg)
 	if err != nil {
-		return nil, fmt.Errorf("dial mikrotik: %w", err)
-	}
-
-	sshClient, err := ssh.Dial(conn, cfg)
-	if err != nil {
-		conn.Close()
 		return nil, fmt.Errorf("ssh handshake: %w", err)
 	}
 
@@ -94,11 +88,6 @@ func (c *Client) getVersion(ctx context.Context) (string, error) {
 		}
 	}
 	return "unknown", nil
-}
-
-func dialContext(ctx context.Context, network, address string, timeout time.Duration) (net.Conn, error) {
-	d := net.Dialer{Timeout: timeout}
-	return d.DialContext(ctx, network, address)
 }
 
 func parseIdentity(output string) string {

@@ -12,17 +12,9 @@ import (
 // ErrNotFound is returned when a payment does not exist.
 var ErrNotFound = errors.New("payment not found")
 
-// DB is implemented by both *sql.DB and *sql.Tx.
-type DB interface {
-	ExecContext(ctx context.Context, query string, args ...interface{}) (sql.Result, error)
-	QueryRowContext(ctx context.Context, query string, args ...interface{}) *sql.Row
-	QueryContext(ctx context.Context, query string, args ...interface{}) (*sql.Rows, error)
-	BeginTx(ctx context.Context, opts *sql.TxOptions) (*sql.Tx, error)
-}
-
 // Repository provides data access for payments.
 type Repository struct {
-	db DB
+	db interface{}
 }
 
 // New creates a payment repository.
@@ -135,7 +127,7 @@ func (r *Repository) MarkFailed(ctx context.Context, id uint64) error {
 
 // Begin starts a transaction.
 func (r *Repository) Begin(ctx context.Context) (*sql.Tx, error) {
-	return r.db.BeginTx(ctx, nil)
+	return r.db.(*sql.DB).BeginTx(ctx, nil)
 }
 
 // WithTx returns a repository bound to the provided transaction.
