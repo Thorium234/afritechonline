@@ -49,8 +49,9 @@ func Load() (*Config, error) {
 		DBMaxLifetimeMin: getEnvInt("DB_CONN_MAX_LIFETIME_MIN", 5),
 	}
 
-	if cfg.JWTSecret == "" || cfg.JWTSecret == "change-me-in-production" {
-		return nil, fmt.Errorf("JWT_SECRET must be set and must not be the default value")
+	// Validate JWT secret: must be set and not the default placeholder
+	if err := validateJWTSecret(cfg.JWTSecret); err != nil {
+		return nil, err
 	}
 
 	return cfg, nil
@@ -60,6 +61,32 @@ func Load() (*Config, error) {
 func (c *Config) DSN() string {
 	return fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?parseTime=true&charset=utf8mb4&loc=UTC",
 		c.DBUser, c.DBPassword, c.DBHost, c.DBPort, c.DBName)
+}
+
+// validateJWTSecret ensures the JWT secret meets security requirements.
+func validateJWTSecret(secret string) error {
+	if secret == "" {
+		return fmt.Errorf("JWT_SECRET environment variable is required")
+	}
+	
+	placeholders := []string{
+		"change-me-in-production",
+		"change-me-in-production-use-strong-random-string",
+		"change-me-in-production-use-strong-random-string-at-least-32-chars",
+	}
+	
+	for _, p := range placeholders {
+		if secret == p {
+			return fmt.Errorf("JWT_SECRET cannot be a default placeholder. Generate a strong random secret using: openssl rand -base64 32")
+		}
+	}
+	
+	// Minimum 32 characters for security (256-bit when base64 encoded)
+	if len(secret) < 32 {
+		return fmt.Errorf("JWT_SECRET must be at least 32 characters long (got %d). Generate using: openssl rand -base64 32", len(secret))
+	}
+	
+	return nil
 }
 
 func getEnv(key, def string) string {
