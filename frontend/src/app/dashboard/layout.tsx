@@ -29,7 +29,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         onClick={() => setSidebarOpen(true)}
         className="lg:hidden fixed top-4 left-4 z-50 p-2 rounded-lg bg-obsidian-light border border-white/10 text-pearl"
       >
-        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
         </svg>
       </button>
@@ -49,7 +49,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           <div className="p-6">
             <Link href="/dashboard" className="flex items-center gap-3">
               <div className="w-9 h-9 rounded-xl bg-acid-lime/10 border border-acid-lime/20 flex items-center justify-center">
-                <svg className="w-5 h-5 text-acid-lime" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-4 h-4 text-acid-lime" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
                 </svg>
               </div>
@@ -69,14 +69,14 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                   key={item.href}
                   href={item.href}
                   onClick={() => setSidebarOpen(false)}
-                  className={`nav-item px-3 py-2.5 rounded-lg text-sm font-medium relative ${
+                  className={`nav-item px-3 py-2 rounded-lg text-sm font-medium relative ${
                     isActive ? 'active' : ''
                   }`}
                 >
                   {isActive && (
-                    <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-acid-lime rounded-r-full" />
+                    <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-5 bg-acid-lime rounded-r-full" />
                   )}
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d={item.icon} />
                   </svg>
                   {item.label}
@@ -105,9 +105,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             {/* Logout */}
             <button
               onClick={handleLogout}
-              className="nav-item w-full px-3 py-2.5 rounded-lg text-sm font-medium text-red-400 hover:text-red-300"
+              className="nav-item w-full px-3 py-2 rounded-lg text-sm font-medium text-red-400 hover:text-red-300"
             >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
               </svg>
               Logout
