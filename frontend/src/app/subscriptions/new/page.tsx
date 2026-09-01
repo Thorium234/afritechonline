@@ -21,6 +21,7 @@ export default function NewSubscriptionPage() {
   const [customerId, setCustomerId] = useState('')
   const [packageId, setPackageId] = useState('')
   const [message, setMessage] = useState('')
+  const [loading, setLoading] = useState(false)
 
   useEffect(() => {
     const token = localStorage.getItem('access_token')
@@ -35,53 +36,80 @@ export default function NewSubscriptionPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    const token = localStorage.getItem('access_token')
-    const res = await fetch('/api/v1/subscriptions', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify({ customer_id: parseInt(customerId), package_id: parseInt(packageId) }),
-    })
-    if (res.ok) {
-      window.location.href = '/subscriptions'
-    } else {
-      const data = await res.json()
-      setMessage(data.error?.message || 'Failed to create subscription')
+    setMessage('')
+    setLoading(true)
+
+    try {
+      const token = localStorage.getItem('access_token')
+      const res = await fetch('/api/v1/subscriptions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ customer_id: parseInt(customerId), package_id: parseInt(packageId) }),
+      })
+      if (res.ok) {
+        window.location.href = '/subscriptions'
+      } else {
+        const data = await res.json()
+        setMessage(data.error?.message || 'Failed to create subscription')
+      }
+    } finally {
+      setLoading(false)
     }
   }
 
   return (
     <div className="p-8 max-w-2xl">
-      <h1 className="text-2xl font-bold mb-6 text-pearl">New Subscription</h1>
+      <div className="page-header">
+        <h1 className="page-title">New Subscription</h1>
+        <p className="page-subtitle">Assign a package to a customer</p>
+      </div>
+
       {message && (
-        <div className="mb-4 p-3 rounded bg-red-900/20 border border-red-500/30 text-red-400 text-sm">
+        <div className="mb-6 p-3 rounded-lg bg-red-900/20 border border-red-500/30 text-red-400 text-sm animate-fade-in">
           {message}
         </div>
       )}
-      <form onSubmit={handleSubmit} className="card p-6 space-y-4">
+
+      <form onSubmit={handleSubmit} className="card p-6 space-y-5">
         <div>
           <label className="block text-sm font-medium mb-2 text-pearl">Customer</label>
-          <select className="input-field" value={customerId} onChange={(e) => setCustomerId(e.target.value)} required>
-            <option value="">Select customer</option>
+          <select
+            className="input-field"
+            value={customerId}
+            onChange={(e) => setCustomerId(e.target.value)}
+            required
+          >
+            <option value="">Select a customer</option>
             {customers.map((c) => (
-              <option key={c.id} value={c.id}>{c.full_name} ({c.username})</option>
+              <option key={c.id} value={c.id}>{c.full_name} (@{c.username})</option>
             ))}
           </select>
         </div>
         <div>
           <label className="block text-sm font-medium mb-2 text-pearl">Package</label>
-          <select className="input-field" value={packageId} onChange={(e) => setPackageId(e.target.value)} required>
-            <option value="">Select package</option>
+          <select
+            className="input-field"
+            value={packageId}
+            onChange={(e) => setPackageId(e.target.value)}
+            required
+          >
+            <option value="">Select a package</option>
             {packages.map((p) => (
               <option key={p.id} value={p.id}>{p.name} - {p.currency} {p.price} ({p.duration_days} days)</option>
             ))}
           </select>
         </div>
-        <button type="submit" className="btn-primary">
-          Create Subscription
-        </button>
+        <div className="flex gap-3 pt-2">
+          <button type="submit" className="btn-primary" disabled={loading}>
+            {loading ? 'Creating...' : 'Create Subscription'}
+          </button>
+          <a href="/subscriptions" className="btn-secondary">
+            Cancel
+          </a>
+        </div>
       </form>
     </div>
   )
