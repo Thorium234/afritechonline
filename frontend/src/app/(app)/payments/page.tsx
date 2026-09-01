@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import Link from 'next/link'
 import PageHeader from '@/components/PageHeader'
 import StatusBadge from '@/components/StatusBadge'
 import { SkeletonTable } from '@/components/Skeleton'
@@ -110,6 +111,7 @@ export default function PaymentsPage() {
                   <th>Amount</th>
                   <th>Status</th>
                   <th>When</th>
+                  <th className="w-40">Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -135,6 +137,38 @@ export default function PaymentsPage() {
                       <td>
                         <div className="text-sm">{formatDateTime(p.paid_at || p.created_at)}</div>
                         <div className="text-xs text-[var(--text-mute)]">{relativeTime(p.paid_at || p.created_at)}</div>
+                      </td>
+                      <td className="whitespace-nowrap">
+                        <div className="flex items-center gap-1">
+                          {p.status === 'PENDING' && (
+                            <>
+                              <button
+                                type="button"
+                                onClick={async () => {
+                                  try {
+                                    await api.post(`/api/v1/payments/${p.id}/complete`)
+                                    setPayments((ps) => ps.map((x) => x.id === p.id ? { ...x, status: 'COMPLETED' } : x))
+                                  } catch (err) {
+                                    window.alert(err instanceof Error ? err.message : 'Action failed')
+                                  }
+                                }}
+                                className="btn btn-success btn-sm text-xs px-2 py-1"
+                              >Complete</button>
+                              <button
+                                type="button"
+                                onClick={async () => {
+                                  try {
+                                    await api.post(`/api/v1/payments/${p.id}/fail`)
+                                    setPayments((ps) => ps.map((x) => x.id === p.id ? { ...x, status: 'FAILED' } : x))
+                                  } catch (err) {
+                                    window.alert(err instanceof Error ? err.message : 'Action failed')
+                                  }
+                                }}
+                                className="btn btn-danger btn-sm text-xs px-2 py-1"
+                              >Fail</button>
+                            </>
+                          )}
+                        </div>
                       </td>
                     </tr>
                   )

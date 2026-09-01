@@ -100,6 +100,7 @@ export default function SubscriptionsPage() {
                   <th>Amount</th>
                   <th>Status</th>
                   <th>Expires</th>
+                  <th className="w-24">Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -134,6 +135,9 @@ export default function SubscriptionsPage() {
                       <td>
                         <div className="text-sm">{formatDate(s.expiry_date)}</div>
                         <div className="text-xs text-[var(--text-mute)]">{relativeTime(s.expiry_date)}</div>
+                      </td>
+                      <td className="whitespace-nowrap">
+                        <Link href={`/subscriptions/${s.id}`} className="btn btn-secondary btn-sm">Edit</Link>
                       </td>
                     </tr>
                   )

@@ -100,6 +100,23 @@ export default function PackagesPage() {
                 <span>Created {relativeTime(p.created_at)}</span>
                 <span>{formatDate(p.created_at)}</span>
               </div>
+              <div className="mt-4 flex items-center gap-2">
+                <Link href={`/packages/${p.id}`} className="btn btn-secondary btn-sm flex-1">Edit</Link>
+                <button
+                  type="button"
+                  onClick={async () => {
+                    if (!window.confirm(`Delete ${p.name}?`)) return
+                    try {
+                      await api.delete(`/api/v1/packages/${p.id}`)
+                      setPackages((current) => current.filter((item) => item.id !== p.id))
+                    } catch (err) {
+                      const message = err instanceof Error ? err.message : 'Delete failed'
+                      window.alert(message)
+                    }
+                  }}
+                  className="btn btn-danger btn-sm flex-1"
+                >Delete</button>
+              </div>
             </div>
           ))}
         </div>

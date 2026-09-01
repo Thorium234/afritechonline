@@ -82,6 +82,7 @@ export default function CustomersPage() {
                   <th>Email</th>
                   <th>Status</th>
                   <th>Joined</th>
+                  <th className="w-40">Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -104,6 +105,25 @@ export default function CustomersPage() {
                     <td>
                       <div className="text-sm">{formatDate(c.created_at)}</div>
                       <div className="text-xs text-[var(--text-mute)]">{relativeTime(c.created_at)}</div>
+                    </td>
+                    <td className="whitespace-nowrap">
+                      <div className="flex items-center gap-2">
+                        <Link href={`/customers/${c.id}`} className="btn btn-secondary btn-sm">Edit</Link>
+                        <button
+                          type="button"
+                          onClick={async () => {
+                            if (!window.confirm(`Delete ${c.full_name}?`)) return
+                            try {
+                              await api.delete(`/api/v1/customers/${c.id}`)
+                              setCustomers((current) => current.filter((item) => item.id !== c.id))
+                            } catch (err) {
+                              const message = err instanceof Error ? err.message : 'Delete failed'
+                              window.alert(message)
+                            }
+                          }}
+                          className="btn btn-danger btn-sm"
+                        >Delete</button>
+                      </div>
                     </td>
                   </tr>
                 ))}
