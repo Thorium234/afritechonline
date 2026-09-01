@@ -1,7 +1,6 @@
 package routes
 
 import (
-	"context"
 	"database/sql"
 	"net/http"
 	"time"
@@ -14,6 +13,7 @@ import (
 	"github.com/Thorium234/afritechonline/backend/internal/customers"
 	"github.com/Thorium234/afritechonline/backend/internal/invoices"
 	"github.com/Thorium234/afritechonline/backend/internal/mikrotik"
+	"github.com/Thorium234/afritechonline/backend/internal/mpesa"
 	"github.com/Thorium234/afritechonline/backend/internal/models"
 	"github.com/Thorium234/afritechonline/backend/internal/packages"
 	"github.com/Thorium234/afritechonline/backend/internal/payments"
@@ -91,14 +91,15 @@ func Setup(db *sql.DB, cfg *config.Config, log zerolog.Logger) *gin.Engine {
 
 	v1 := r.Group("/api/v1")
 
-	// Public rate limiting for auth endpoints.
-	publicRateLimiter := middleware.NewRateLimiter(20, time.Minute)
-	a.Use(publicRateLimiter.Limit())
-
-	// Stricter rate limiting for public endpoints.
-	strictLimiter := middleware.NewRateLimiter(5, time.Minute)
-	a.Use(strictLimiter.Limit())
+	// Auth (public)
+	a := v1.Group("/auth")
 	{
+		publicRateLimiter := middleware.NewRateLimiter(20, time.Minute)
+		a.Use(publicRateLimiter.Limit())
+
+		strictLimiter := middleware.NewRateLimiter(5, time.Minute)
+		a.Use(strictLimiter.Limit())
+
 		a.POST("/register", authHandler.Register)
 		a.POST("/login", authHandler.Login)
 		a.POST("/refresh", authHandler.Refresh)
@@ -171,8 +172,8 @@ func Setup(db *sql.DB, cfg *config.Config, log zerolog.Logger) *gin.Engine {
 	// M-Pesa
 	mpesa := protected.Group("/payments/mpesa")
 	{
-		mpesa.POST("/stkpush", paymentHandler.STKPush)
-		mpesa.POST("/callback", paymentHandler.Callback)
+		mpesa.POST("/stkpush", mpesaHandler.STKPush)
+		mpesa.POST("/callback", mpesaHandler.Callback)
 	}
 
 	// RADIUS

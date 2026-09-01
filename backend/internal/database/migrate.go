@@ -53,10 +53,19 @@ func Migrate(db *sql.DB) error {
 		if err != nil {
 			return fmt.Errorf("begin tx for %s: %w", name, err)
 		}
-		if _, err := tx.Exec(string(content)); err != nil {
-			tx.Rollback()
-			return fmt.Errorf("apply migration %s: %w", name, err)
+
+		statements := splitStatements(string(content))
+		for _, stmt := range statements {
+			stmt = strings.TrimSpace(stmt)
+			if stmt == "" {
+				continue
+			}
+			if _, err := tx.Exec(stmt); err != nil {
+				tx.Rollback()
+				return fmt.Errorf("apply migration %s: %w", name, err)
+			}
 		}
+
 		if _, err := tx.Exec(`INSERT INTO schema_migrations (version) VALUES (?)`, name); err != nil {
 			tx.Rollback()
 			return fmt.Errorf("record migration %s: %w", name, err)
@@ -67,4 +76,28 @@ func Migrate(db *sql.DB) error {
 	}
 
 	return nil
+}
+
+func splitStatements(sql string) []string {
+	var stmts []string
+	var buf strings.Builder
+	inString := false
+	var prev rune
+
+	for _, r := range sql {
+		if r == '\'' && prev != '\\' {
+			inString = !inString
+		}
+		if r == ';' && !inString {
+			stmts = append(stmts, buf.String())
+			buf.Reset()
+		} else {
+			buf.WriteRune(r)
+		}
+		prev = r
+	}
+	if buf.Len() > 0 {
+		stmts = append(stmts, buf.String())
+	}
+	return stmts
 }

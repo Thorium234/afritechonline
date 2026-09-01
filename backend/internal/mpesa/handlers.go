@@ -1,7 +1,6 @@
 package mpesa
 
 import (
-	"context"
 	"net/http"
 
 	"github.com/gin-gonic/gin"

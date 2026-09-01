@@ -14,7 +14,8 @@ var ErrNotFound = errors.New("payment not found")
 
 // Repository provides data access for payments.
 type Repository struct {
-	db interface{}
+	db *sql.DB
+	tx *sql.Tx
 }
 
 // New creates a payment repository.
@@ -38,6 +39,30 @@ func scanPayment(row interface{ Scan(...any) error }) (*models.Payment, error) {
 	return &p, nil
 }
 
+// execContext executes a query using tx if set, otherwise db.
+func (r *Repository) execContext(ctx context.Context, query string, args ...interface{}) (sql.Result, error) {
+	if r.tx != nil {
+		return r.tx.ExecContext(ctx, query, args...)
+	}
+	return r.db.ExecContext(ctx, query, args...)
+}
+
+// queryRowContext executes a query using tx if set, otherwise db.
+func (r *Repository) queryRowContext(ctx context.Context, query string, args ...interface{}) *sql.Row {
+	if r.tx != nil {
+		return r.tx.QueryRowContext(ctx, query, args...)
+	}
+	return r.db.QueryRowContext(ctx, query, args...)
+}
+
+// queryContext executes a query using tx if set, otherwise db.
+func (r *Repository) queryContext(ctx context.Context, query string, args ...interface{}) (*sql.Rows, error) {
+	if r.tx != nil {
+		return r.tx.QueryContext(ctx, query, args...)
+	}
+	return r.db.QueryContext(ctx, query, args...)
+}
+
 // Create inserts a new payment.
 func (r *Repository) Create(ctx context.Context, p *models.Payment) (*models.Payment, error) {
 	if p.Currency == "" {
@@ -46,7 +71,7 @@ func (r *Repository) Create(ctx context.Context, p *models.Payment) (*models.Pay
 	if p.Status == "" {
 		p.Status = "PENDING"
 	}
-	res, err := r.db.ExecContext(ctx,
+	res, err := r.execContext(ctx,
 		`INSERT INTO payments (invoice_id, customer_id, amount, currency, method, reference, status, paid_at)
 		 VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
 		p.InvoiceID, p.CustomerID, p.Amount, p.Currency, p.Method, p.Reference, p.Status, p.PaidAt)
@@ -63,13 +88,13 @@ func (r *Repository) Create(ctx context.Context, p *models.Payment) (*models.Pay
 
 // GetByID returns a payment.
 func (r *Repository) GetByID(ctx context.Context, id uint64) (*models.Payment, error) {
-	row := r.db.QueryRowContext(ctx, `SELECT `+cols+` FROM payments WHERE id = ?`, id)
+	row := r.queryRowContext(ctx, `SELECT `+cols+` FROM payments WHERE id = ?`, id)
 	return scanPayment(row)
 }
 
 // GetByReference returns a payment by its external reference + method.
 func (r *Repository) GetByReference(ctx context.Context, reference, method string) (*models.Payment, error) {
-	row := r.db.QueryRowContext(ctx,
+	row := r.queryRowContext(ctx,
 		`SELECT `+cols+` FROM payments WHERE reference = ? AND method = ?`, reference, method)
 	return scanPayment(row)
 }
@@ -88,13 +113,13 @@ func (r *Repository) List(ctx context.Context, customerID uint64, status string,
 	}
 
 	var total int64
-	if err := r.db.QueryRowContext(ctx, `SELECT COUNT(*) FROM payments`+where, args...).Scan(&total); err != nil {
+	if err := r.queryRowContext(ctx, `SELECT COUNT(*) FROM payments`+where, args...).Scan(&total); err != nil {
 		return nil, 0, err
 	}
 
 	query := `SELECT ` + cols + ` FROM payments` + where + ` ORDER BY created_at DESC LIMIT ? OFFSET ?`
 	args = append(args, limit, offset)
-	rows, err := r.db.QueryContext(ctx, query, args...)
+	rows, err := r.queryContext(ctx, query, args...)
 	if err != nil {
 		return nil, 0, err
 	}
@@ -113,24 +138,24 @@ func (r *Repository) List(ctx context.Context, customerID uint64, status string,
 
 // MarkCompleted sets a payment as COMPLETED with a paid timestamp.
 func (r *Repository) MarkCompleted(ctx context.Context, id uint64) error {
-	_, err := r.db.ExecContext(ctx,
+	_, err := r.execContext(ctx,
 		`UPDATE payments SET status = 'COMPLETED', paid_at = ? WHERE id = ?`, time.Now(), id)
 	return err
 }
 
 // MarkFailed sets a payment as FAILED.
 func (r *Repository) MarkFailed(ctx context.Context, id uint64) error {
-	_, err := r.db.ExecContext(ctx,
+	_, err := r.execContext(ctx,
 		`UPDATE payments SET status = 'FAILED' WHERE id = ?`, id)
 	return err
 }
 
 // Begin starts a transaction.
 func (r *Repository) Begin(ctx context.Context) (*sql.Tx, error) {
-	return r.db.(*sql.DB).BeginTx(ctx, nil)
+	return r.db.BeginTx(ctx, nil)
 }
 
 // WithTx returns a repository bound to the provided transaction.
 func (r *Repository) WithTx(tx *sql.Tx) *Repository {
-	return &Repository{db: tx}
+	return &Repository{db: r.db, tx: tx}
 }

@@ -2,9 +2,10 @@ package mpesa
 
 import (
 	"context"
-	"time"
+	"fmt"
 
 	"github.com/Thorium234/afritechonline/backend/internal/models"
+	"github.com/Thorium234/afritechonline/backend/internal/payments"
 )
 
 // Service orchestrates M-Pesa operations.
@@ -59,16 +60,16 @@ func (s *Service) ProcessCallback(ctx context.Context, body []byte) error {
 	}
 
 	// Find the payment by reference
-	p, err := s.payments.GetByReference(ctx, payment.Reference, models.PaymentMethodMPesa)
+	p, err := s.payments.GetByReference(ctx, payment.Reference, payments.PaymentMethodMPesa)
 	if err != nil {
 		return err
 	}
 
-	if p.Status == models.StatusCompleted {
+	if p.Status == payments.StatusCompleted {
 		return nil // idempotent
 	}
 
-	if payment.Status == models.StatusCompleted {
+	if payment.Status == payments.StatusCompleted {
 		if err := s.payments.MarkCompleted(ctx, p.ID); err != nil {
 			return err
 		}
@@ -92,8 +93,4 @@ func (s *Service) ProcessCallback(ctx context.Context, body []byte) error {
 	}
 
 	return nil
-}
-
-func fmt.Sprintf(format string, args ...interface{}) string {
-	return fmt.Sprintf(format, args...)
 }

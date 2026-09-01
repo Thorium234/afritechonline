@@ -13,6 +13,7 @@ import (
 	"time"
 
 	"github.com/Thorium234/afritechonline/backend/internal/models"
+	"github.com/Thorium234/afritechonline/backend/internal/payments"
 )
 
 // Config holds M-Pesa API credentials.
@@ -143,24 +144,24 @@ func (c *Client) ParseCallback(body []byte) (*models.Payment, error) {
 	}
 
 	resultCode := payload.Body.stkCallback.ResultCode
-	status := models.StatusCompleted
+	status := payments.StatusCompleted
 	if resultCode != 0 {
-		status = models.StatusFailed
+		status = payments.StatusFailed
 	}
 
 	// Extract metadata
-	var phoneNumber, mpesaReceipt string
+	var mpesaReceipt string
 	for _, item := range payload.Body.stkCallback.CallbackMetadata.Item {
 		switch item.Name {
 		case "PhoneNumber":
-			phoneNumber = fmt.Sprintf("%v", item.Value)
+			_ = fmt.Sprintf("%v", item.Value)
 		case "MpesaReceiptNumber":
 			mpesaReceipt = fmt.Sprintf("%v", item.Value)
 		}
 	}
 
 	return &models.Payment{
-		Method:    models.PaymentMethodMPesa,
+		Method:    payments.PaymentMethodMPesa,
 		Reference: mpesaReceipt,
 		Status:    status,
 	}, nil

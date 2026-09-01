@@ -3,8 +3,8 @@ set -e
 
 echo "=== Afritech Online Startup ==="
 
-# Ensure Node.js is in PATH for Git Bash
-export PATH="/c/Program Files/nodejs:$PATH"
+# Ensure Go and Node.js are in PATH for Git Bash
+export PATH="/c/Program Files/Go/bin:/c/Program Files/nodejs:$PATH"
 
 # Check Go
 if ! command -v go &> /dev/null; then

@@ -17,6 +17,14 @@ const (
 	StatusCancelled = "CANCELLED"
 )
 
+// Payment method constants.
+const (
+	PaymentMethodManual = "MANUAL"
+	PaymentMethodMPesa  = "MPESA"
+	PaymentMethodCard   = "CARD"
+	PaymentMethodOther  = "OTHER"
+)
+
 // InvoiceService marks invoices paid and fetches them.
 type InvoiceService interface {
 	Get(ctx context.Context, id uint64) (*models.Invoice, error)
